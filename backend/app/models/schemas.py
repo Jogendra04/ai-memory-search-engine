@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from typing import List
 
 
 class ChatRequest(BaseModel):
@@ -8,3 +9,4 @@ class ChatRequest(BaseModel):
 class MemoryRequest(BaseModel):
     title: str
     content: str
+    tags: List[str] = []
