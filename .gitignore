@@ -1,14 +1,13 @@
-# Python
-venv/
+# Uploaded documents
+uploads/
+
+# Python cache
 __pycache__/
 *.pyc
 
-# Node
-node_modules/
+# Virtual environment
+venv/
+.venv/
 
 # Environment variables
 .env
-
-# OS
-.DS_Store
-Thumbs.db
