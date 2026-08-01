@@ -114,3 +114,48 @@ def delete_memory(memory_id):
     )
 
     print(f"Deleted memory: {memory_id}")
+
+# Get uploaded documents
+def get_documents():
+
+    results = client.scroll(
+        collection_name=COLLECTION_NAME,
+        limit=1000,
+        with_payload=True,
+        with_vectors=False
+    )
+
+    points = results[0]
+
+    documents = {}
+
+    for point in points:
+
+        payload = point.payload
+
+        # Skip memories
+        if payload.get("type") == "memory":
+            continue
+
+        filename = payload.get("filename")
+
+        if not filename:
+            continue
+
+        if filename not in documents:
+            documents[filename] = 0
+
+        documents[filename] += 1
+
+    document_list = []
+
+    for filename, chunks in documents.items():
+        document_list.append(
+            {
+                "filename": filename,
+                "chunks": chunks
+            }
+        )
+
+    return document_list
+    
