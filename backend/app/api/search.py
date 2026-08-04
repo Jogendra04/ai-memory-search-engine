@@ -5,28 +5,27 @@ from app.services.embedding_service import create_embedding
 from app.services.llm_service import generate_answer
 from app.services.qdrant_service import search_embeddings
 
-
 router = APIRouter()
 
 
 @router.post("/search")
 def search(request: ChatRequest):
 
-    # --------------------------------
-    # Create embedding for question
-    # --------------------------------
+    # ======================================
+    # Create embedding for the user question
+    # ======================================
 
     query_embedding = create_embedding(request.question)
 
-    # --------------------------------
+    # ======================================
     # Search Qdrant
-    # --------------------------------
+    # ======================================
 
     results = search_embeddings(query_embedding)
 
-    # --------------------------------
-    # Build context for LLM
-    # --------------------------------
+    # ======================================
+    # Build context
+    # ======================================
 
     context_parts = []
 
@@ -37,35 +36,35 @@ def search(request: ChatRequest):
         # Memory
         if payload.get("type") == "memory":
 
-            title = payload.get("title", "Untitled Memory")
-            content = payload.get("content", "")
-
             context_parts.append(
-                f"Memory Title: {title}\n"
-                f"Memory Content: {content}"
+                f"""
+Memory Title: {payload.get("title", "")}
+Memory Content: {payload.get("content", "")}
+Tags: {", ".join(payload.get("tags", []))}
+"""
             )
 
-        # PDF/document
+        # PDF
         else:
 
-            text = payload.get("text", "")
-
-            context_parts.append(text)
+            context_parts.append(
+                payload.get("text", "")
+            )
 
     context = "\n\n".join(context_parts)
 
-    # --------------------------------
-    # Generate AI answer
-    # --------------------------------
+    # ======================================
+    # Generate Answer
+    # ======================================
 
     answer = generate_answer(
         request.question,
         context
     )
 
-    # --------------------------------
-    # Build sources
-    # --------------------------------
+    # ======================================
+    # Build Sources
+    # ======================================
 
     sources = []
 
@@ -73,31 +72,29 @@ def search(request: ChatRequest):
 
         payload = result.payload
 
-        # Memory source
         if payload.get("type") == "memory":
 
             sources.append({
                 "type": "memory",
-                "title": payload.get("title", "Untitled Memory"),
+                "id": str(result.id),
+                "title": payload.get("title"),
                 "tags": payload.get("tags", []),
-                "score": result.score,
-                "id": str(result.id)
+                "score": result.score
             })
 
-        # PDF/document source
         else:
 
             sources.append({
                 "type": "document",
-                "filename": payload.get("filename", "Unknown"),
+                "id": str(result.id),
+                "filename": payload.get("filename"),
                 "chunk_number": payload.get("chunk_number"),
-                "score": result.score,
-                "id": str(result.id)
+                "score": result.score
             })
 
-    # --------------------------------
-    # Return response
-    # --------------------------------
+    # ======================================
+    # Response
+    # ======================================
 
     return {
         "question": request.question,

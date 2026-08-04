@@ -1,7 +1,6 @@
-from qdrant_client import QdrantClient
-from qdrant_client.models import Distance, VectorParams, PointStruct
+from qdrant_client import QdrantClient  # type: ignore[import]
+from qdrant_client.models import Distance, VectorParams, PointStruct  # type: ignore[import]
 import uuid
-
 
 # Connect to Qdrant running in Docker
 client = QdrantClient(
@@ -40,7 +39,13 @@ def create_collection():
 
 
 # Store an embedding in Qdrant
-def store_embedding(text, embedding, filename, chunk_number):
+def store_embedding(
+    text,
+    embedding,
+    filename,
+    chunk_number,
+    file_hash
+):
 
     client.upsert(
         collection_name=COLLECTION_NAME,
@@ -51,7 +56,8 @@ def store_embedding(text, embedding, filename, chunk_number):
                 payload={
                     "text": text,
                     "filename": filename,
-                    "chunk_number": chunk_number
+                    "chunk_number": chunk_number,
+                    "file_hash": file_hash
                 }
             )
         ]
@@ -59,6 +65,8 @@ def store_embedding(text, embedding, filename, chunk_number):
 
     print(f"Stored chunk {chunk_number} from {filename}")
 
+
+# Store a memory
 def store_memory(title, content, embedding, tags=None):
 
     if tags is None:
@@ -82,7 +90,8 @@ def store_memory(title, content, embedding, tags=None):
 
     print(f"Stored memory: {title}")
 
-# Search for similar embeddings
+
+# Search embeddings
 def search_embeddings(query_embedding, limit=5):
 
     results = client.query_points(
@@ -94,7 +103,7 @@ def search_embeddings(query_embedding, limit=5):
     return results.points
 
 
-# Get all stored memories/documents
+# Get all memories/documents
 def get_all_memories():
 
     results = client.scroll(
@@ -106,6 +115,8 @@ def get_all_memories():
 
     return results[0]
 
+
+# Delete memory
 def delete_memory(memory_id):
 
     client.delete(
@@ -114,6 +125,7 @@ def delete_memory(memory_id):
     )
 
     print(f"Deleted memory: {memory_id}")
+
 
 # Get uploaded documents
 def get_documents():
@@ -133,7 +145,6 @@ def get_documents():
 
         payload = point.payload
 
-        # Skip memories
         if payload.get("type") == "memory":
             continue
 
@@ -150,6 +161,7 @@ def get_documents():
     document_list = []
 
     for filename, chunks in documents.items():
+
         document_list.append(
             {
                 "filename": filename,
@@ -158,4 +170,57 @@ def get_documents():
         )
 
     return document_list
-    
+
+
+# Delete document
+def delete_document(filename):
+
+    results = client.scroll(
+        collection_name=COLLECTION_NAME,
+        limit=1000,
+        with_payload=True,
+        with_vectors=False
+    )
+
+    points = results[0]
+
+    ids_to_delete = []
+
+    for point in points:
+
+        payload = point.payload
+
+        if payload.get("filename") == filename:
+            ids_to_delete.append(point.id)
+
+    if ids_to_delete:
+
+        client.delete(
+            collection_name=COLLECTION_NAME,
+            points_selector=ids_to_delete
+        )
+
+        print(f"Deleted {len(ids_to_delete)} chunks from {filename}")
+
+    return len(ids_to_delete)
+
+
+# Check if document already exists
+def document_exists(file_hash):
+
+    results = client.scroll(
+        collection_name=COLLECTION_NAME,
+        limit=1000,
+        with_payload=True,
+        with_vectors=False
+    )
+
+    points = results[0]
+
+    for point in points:
+        payload = point.payload
+
+        if payload.get("file_hash") == file_hash:
+            return True
+
+    return False
