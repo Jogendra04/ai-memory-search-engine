@@ -1,15 +1,23 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
 from app.models.schemas import ChatRequest
+from app.models.user import User
+
+from app.core.dependencies import get_current_user
+
 from app.services.embedding_service import create_embedding
 from app.services.llm_service import generate_answer
 from app.services.qdrant_service import search_embeddings
+
 
 router = APIRouter()
 
 
 @router.post("/search")
-def search(request: ChatRequest):
+def search(
+    request: ChatRequest,
+    current_user: User = Depends(get_current_user)
+):
 
     # ======================================
     # Create embedding for the user question
@@ -18,10 +26,13 @@ def search(request: ChatRequest):
     query_embedding = create_embedding(request.question)
 
     # ======================================
-    # Search Qdrant
+    # Search Qdrant (Current User Only)
     # ======================================
 
-    results = search_embeddings(query_embedding)
+    results = search_embeddings(
+        query_embedding=query_embedding,
+        user_id=current_user.id
+    )
 
     # ======================================
     # Build context
@@ -31,7 +42,7 @@ def search(request: ChatRequest):
 
     for result in results:
 
-        payload = result.payload
+        payload = result.payload or {}
 
         # Memory
         if payload.get("type") == "memory":
@@ -70,7 +81,7 @@ Tags: {", ".join(payload.get("tags", []))}
 
     for result in results:
 
-        payload = result.payload
+        payload = result.payload or {}
 
         if payload.get("type") == "memory":
 

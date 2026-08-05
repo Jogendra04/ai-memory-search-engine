@@ -12,7 +12,7 @@ from app.services.qdrant_service import (
 )
 
 
-def process_pdf(file):
+def process_pdf(file, user_id):
 
     # Create uploads directory
     upload_dir = "uploads"
@@ -29,7 +29,10 @@ def process_pdf(file):
         file_hash = hashlib.sha256(pdf.read()).hexdigest()
 
     # Check duplicate document
-    if document_exists(file_hash):
+    if document_exists(
+        file_hash,
+        user_id
+    ):
         os.remove(file_path)
 
         return {
@@ -54,7 +57,8 @@ def process_pdf(file):
             embedding,
             file.filename,
             i + 1,
-            file_hash
+            file_hash,
+            user_id
         )
 
     return {

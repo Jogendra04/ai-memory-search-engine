@@ -6,12 +6,17 @@ from app.services.qdrant_service import (
 )
 
 
-def save_memory(title, content, tags=None):
+def save_memory(
+    title,
+    content,
+    user_id,
+    tags=None
+):
 
     if tags is None:
         tags = []
 
-    # Create text that will be converted into an embedding
+    # Create text for embedding
     memory_text = f"{title}\n{content}"
 
     # Create embedding
@@ -22,6 +27,7 @@ def save_memory(title, content, tags=None):
         title=title,
         content=content,
         embedding=embedding,
+        user_id=user_id,
         tags=tags
     )
 
@@ -33,17 +39,16 @@ def save_memory(title, content, tags=None):
     }
 
 
-def list_memories():
+def list_memories(user_id):
 
-    memories = get_all_memories()
+    memories = get_all_memories(user_id)
 
     results = []
 
     for memory in memories:
 
-        payload = memory.payload
+        payload = memory.payload or {}
 
-        # Only return actual memories
         if payload.get("type") == "memory":
 
             results.append({
@@ -55,9 +60,13 @@ def list_memories():
 
     return results
 
-def remove_memory(memory_id):
 
-    delete_memory(memory_id)
+def remove_memory(memory_id, user_id):
+
+    delete_memory(
+        memory_id,
+        user_id
+    )
 
     return {
         "message": "Memory deleted successfully!",
