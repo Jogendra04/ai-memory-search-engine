@@ -1,53 +1,39 @@
-import { useState } from "react";
-import "./App.css";
+import { Routes, Route, Navigate } from "react-router-dom";
 
-import Chat from "./components/Chat/Chat";
-import DocumentUpload from "./components/Documents/DocumentUpload";
-import DocumentList from "./components/Documents/DocumentList";
-import MemoryForm from "./components/Memories/MemoryForm";
-import MemoryList from "./components/Memories/MemoryList";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import Dashboard from "./pages/Dashboard";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
-
-  const [documentRefresh, setDocumentRefresh] = useState(0);
-  const [memoryRefresh, setMemoryRefresh] = useState(0);
-
   return (
-    <div className="app">
+    <Routes>
 
-      <h1>AI Memory Search Engine</h1>
+      <Route
+        path="/"
+        element={<Navigate to="/login" replace />}
+      />
 
-      <div className="main-layout">
+      <Route
+        path="/login"
+        element={<Login />}
+      />
 
-        <Chat />
+      <Route
+        path="/register"
+        element={<Register />}
+      />
 
-        <div className="memory-section">
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        }
+      />
 
-          <DocumentUpload
-            onUploadSuccess={() =>
-              setDocumentRefresh((value) => value + 1)
-            }
-          />
-
-          <DocumentList
-            refresh={documentRefresh}
-          />
-
-          <MemoryForm
-            onMemorySaved={() =>
-              setMemoryRefresh((value) => value + 1)
-            }
-          />
-
-          <MemoryList
-            refresh={memoryRefresh}
-          />
-
-        </div>
-
-      </div>
-
-    </div>
+    </Routes>
   );
 }
 

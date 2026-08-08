@@ -19,7 +19,13 @@ def get_current_user(
     db: Session = Depends(get_db)
 ):
 
+    print("=" * 50)
+    print("TOKEN:", token)
+
     payload = verify_access_token(token)
+
+    print("PAYLOAD:", payload)
+    print("=" * 50)
 
     if payload is None:
         raise HTTPException(

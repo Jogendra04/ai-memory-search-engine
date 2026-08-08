@@ -1,8 +1,16 @@
 const API_URL = "http://127.0.0.1:8000";
 
 // =====================================
-// Helper Function
+// Helper Functions
 // =====================================
+
+function getAuthHeaders() {
+  const token = localStorage.getItem("access_token");
+
+  return {
+    Authorization: `Bearer ${token}`,
+  };
+}
 
 async function handleResponse(response) {
   const data = await response.json();
@@ -23,6 +31,7 @@ export async function search(question) {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      ...getAuthHeaders(),
     },
     body: JSON.stringify({
       question,
@@ -43,6 +52,9 @@ export async function uploadDocument(file) {
 
   const response = await fetch(`${API_URL}/upload`, {
     method: "POST",
+    headers: {
+      ...getAuthHeaders(),
+    },
     body: formData,
   });
 
@@ -50,7 +62,11 @@ export async function uploadDocument(file) {
 }
 
 export async function getDocuments() {
-  const response = await fetch(`${API_URL}/documents`);
+  const response = await fetch(`${API_URL}/documents`, {
+    headers: {
+      ...getAuthHeaders(),
+    },
+  });
 
   return handleResponse(response);
 }
@@ -60,6 +76,9 @@ export async function deleteDocument(filename) {
     `${API_URL}/documents/${filename}`,
     {
       method: "DELETE",
+      headers: {
+        ...getAuthHeaders(),
+      },
     }
   );
 
@@ -71,7 +90,11 @@ export async function deleteDocument(filename) {
 // =====================================
 
 export async function getMemories() {
-  const response = await fetch(`${API_URL}/memories`);
+  const response = await fetch(`${API_URL}/memories`, {
+    headers: {
+      ...getAuthHeaders(),
+    },
+  });
 
   return handleResponse(response);
 }
@@ -81,6 +104,7 @@ export async function saveMemory(memory) {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      ...getAuthHeaders(),
     },
     body: JSON.stringify(memory),
   });
@@ -91,6 +115,9 @@ export async function saveMemory(memory) {
 export async function deleteMemory(id) {
   const response = await fetch(`${API_URL}/memory/${id}`, {
     method: "DELETE",
+    headers: {
+      ...getAuthHeaders(),
+    },
   });
 
   return handleResponse(response);
