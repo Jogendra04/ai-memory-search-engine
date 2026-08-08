@@ -19,24 +19,27 @@ def search(
     current_user: User = Depends(get_current_user)
 ):
 
-    # ======================================
-    # Create embedding for the user question
-    # ======================================
+    # ==========================================
+    # Create embedding for the user's question
+    # ==========================================
 
-    query_embedding = create_embedding(request.question)
+    query_embedding = create_embedding(
+        request.question
+    )
 
-    # ======================================
-    # Search Qdrant (Current User Only)
-    # ======================================
+    # ==========================================
+    # Search Qdrant for this user
+    # ==========================================
 
     results = search_embeddings(
         query_embedding=query_embedding,
-        user_id=current_user.id
+        user_id=current_user.id,
+        limit=5
     )
 
-    # ======================================
-    # Build context
-    # ======================================
+    # ==========================================
+    # Build context for Llama
+    # ==========================================
 
     context_parts = []
 
@@ -44,38 +47,83 @@ def search(
 
         payload = result.payload or {}
 
+        # --------------------------------------
         # Memory
+        # --------------------------------------
+
         if payload.get("type") == "memory":
+
+            title = payload.get("title", "")
+            content = payload.get("content", "")
+            tags = payload.get("tags", [])
 
             context_parts.append(
                 f"""
-Memory Title: {payload.get("title", "")}
-Memory Content: {payload.get("content", "")}
-Tags: {", ".join(payload.get("tags", []))}
+SOURCE TYPE: SAVED MEMORY
+
+Memory Title:
+{title}
+
+Memory Content:
+{content}
+
+Tags:
+{", ".join(tags)}
 """
             )
 
-        # PDF
+        # --------------------------------------
+        # PDF document
+        # --------------------------------------
+
         else:
 
-            context_parts.append(
-                payload.get("text", "")
+            filename = payload.get(
+                "filename",
+                "Unknown document"
             )
 
-    context = "\n\n".join(context_parts)
+            chunk_number = payload.get(
+                "chunk_number",
+                ""
+            )
 
-    # ======================================
-    # Generate Answer
-    # ======================================
+            text = payload.get(
+                "text",
+                ""
+            )
+
+            context_parts.append(
+                f"""
+SOURCE TYPE: UPLOADED DOCUMENT
+
+Filename:
+{filename}
+
+Chunk:
+{chunk_number}
+
+Content:
+{text}
+"""
+            )
+
+    context = "\n\n".join(
+        context_parts
+    )
+
+    # ==========================================
+    # Generate answer using Llama
+    # ==========================================
 
     answer = generate_answer(
         request.question,
         context
     )
 
-    # ======================================
-    # Build Sources
-    # ======================================
+    # ==========================================
+    # Build sources
+    # ==========================================
 
     sources = []
 
@@ -83,29 +131,48 @@ Tags: {", ".join(payload.get("tags", []))}
 
         payload = result.payload or {}
 
+        # --------------------------------------
+        # Memory source
+        # --------------------------------------
+
         if payload.get("type") == "memory":
 
-            sources.append({
-                "type": "memory",
-                "id": str(result.id),
-                "title": payload.get("title"),
-                "tags": payload.get("tags", []),
-                "score": result.score
-            })
+            sources.append(
+                {
+                    "type": "memory",
+                    "id": str(result.id),
+                    "title": payload.get("title"),
+                    "tags": payload.get(
+                        "tags",
+                        []
+                    ),
+                    "score": result.score
+                }
+            )
+
+        # --------------------------------------
+        # Document source
+        # --------------------------------------
 
         else:
 
-            sources.append({
-                "type": "document",
-                "id": str(result.id),
-                "filename": payload.get("filename"),
-                "chunk_number": payload.get("chunk_number"),
-                "score": result.score
-            })
+            sources.append(
+                {
+                    "type": "document",
+                    "id": str(result.id),
+                    "filename": payload.get(
+                        "filename"
+                    ),
+                    "chunk_number": payload.get(
+                        "chunk_number"
+                    ),
+                    "score": result.score
+                }
+            )
 
-    # ======================================
-    # Response
-    # ======================================
+    # ==========================================
+    # Return response
+    # ==========================================
 
     return {
         "question": request.question,

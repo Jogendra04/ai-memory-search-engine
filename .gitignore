@@ -65,3 +65,25 @@ dist/
 .pytest_cache/
 .coverage
 htmlcov/
+
+# ==========================
+# Frontend Environment
+# ==========================
+
+frontend/.env
+frontend/.env.local
+frontend/.env.*.local
+
+# ==========================
+# Python Virtual Environment
+# ==========================
+
+backend/venv/
+backend/.venv/
+
+# ==========================
+# OS / Temporary Files
+# ==========================
+
+*.tmp
+*.temp
