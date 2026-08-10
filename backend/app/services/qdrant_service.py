@@ -199,6 +199,63 @@ def store_memory(
             "Unable to save the memory in the search database."
         ) from error
 
+# ==========================
+# Update Memory
+# ==========================
+
+def update_memory(
+    memory_id,
+    title,
+    content,
+    embedding,
+    user_id,
+    tags=None
+):
+
+    if tags is None:
+        tags = []
+
+    # Get the existing memory
+    results = client.retrieve(
+        collection_name=COLLECTION_NAME,
+        ids=[memory_id],
+        with_payload=True,
+        with_vectors=False
+    )
+
+    # Memory does not exist
+    if not results:
+        return False
+
+    existing_payload = results[0].payload or {}
+
+    # Make sure the memory belongs to this user
+    if existing_payload.get("user_id") != user_id:
+        return False
+
+    # Update the existing Qdrant point
+    client.upsert(
+        collection_name=COLLECTION_NAME,
+        points=[
+            PointStruct(
+                id=memory_id,
+                vector=embedding,
+                payload={
+                    "type": "memory",
+                    "user_id": user_id,
+                    "title": title,
+                    "content": content,
+                    "tags": tags
+                }
+            )
+        ]
+    )
+
+    print(
+        f"Updated memory: {memory_id}"
+    )
+
+    return True
 
 # ==========================
 # Search Embeddings

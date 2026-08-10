@@ -122,3 +122,19 @@ export async function deleteMemory(id) {
 
   return handleResponse(response);
 }
+
+export async function updateMemory(id, memory) {
+  const response = await fetch(
+    `${API_URL}/memory/${id}`,
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        ...getAuthHeaders(),
+      },
+      body: JSON.stringify(memory),
+    }
+  );
+
+  return handleResponse(response);
+}
