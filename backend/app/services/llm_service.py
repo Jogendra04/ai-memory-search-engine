@@ -6,65 +6,59 @@ from app.services.chat_history import (
 )
 
 
-def generate_answer(question, context):
-
-    # Get previous conversation
-    history = get_history()
-
-    # If no relevant context was retrieved
-    if not context or not context.strip():
-
-        answer = (
-            "I couldn't find that information in the uploaded documents."
-        )
-
-        add_message("user", question)
-        add_message("assistant", answer)
-
-        return answer
+def generate_answer(
+    question,
+    context,
+    user_id
+):
 
     # ==========================================
-    # System instruction
+    # Get conversation history for this user
     # ==========================================
 
-    system_prompt = f"""
-You are an AI assistant for a personal document and memory search engine.
+    history = get_history(
+        user_id=user_id,
+        limit=10
+    )
 
-Your task is to answer the user's question using ONLY the information
-contained in the retrieved context below.
-
-IMPORTANT RULES:
-
-1. Use the retrieved context as your primary source of information.
-2. Do not invent or assume information that is not present in the context.
-3. If the answer can be found in the context, answer it clearly and directly.
-4. If the answer cannot be found in the context, say:
-   "I couldn't find that information in the uploaded documents."
-5. You may combine information from multiple retrieved chunks.
-6. Keep the answer concise but informative.
-
-================ RETRIEVED CONTEXT ================
-
-{context}
-
-================ END CONTEXT ================
-"""
+    # ==========================================
+    # System message
+    # ==========================================
 
     messages = [
         {
             "role": "system",
-            "content": system_prompt
+            "content": f"""
+You are a helpful AI assistant for a user's personal knowledge system.
+
+The provided context can contain:
+1. Uploaded documents
+2. Saved personal memories
+
+Answer the user's question ONLY using the provided context
+and the user's conversation history.
+
+Do not use information from another user's data.
+
+If the answer cannot be found in the provided context,
+say:
+
+"I couldn't find that information in your documents or memories."
+
+Context:
+{context}
+"""
         }
     ]
 
     # ==========================================
-    # Previous conversation
+    # Add this user's previous conversation
     # ==========================================
 
     messages.extend(history)
 
     # ==========================================
-    # Current question
+    # Add current question
     # ==========================================
 
     messages.append(
@@ -86,15 +80,17 @@ IMPORTANT RULES:
     answer = response["message"]["content"]
 
     # ==========================================
-    # Save conversation
+    # Save conversation for THIS user only
     # ==========================================
 
     add_message(
+        user_id,
         "user",
         question
     )
 
     add_message(
+        user_id,
         "assistant",
         answer
     )

@@ -1,12 +1,16 @@
-chat_history = []
+# Store chat history separately for each user
+chat_history = {}
 
 
-def add_message(role, content):
+def add_message(user_id, role, content):
     """
-    Save a chat message.
+    Save a chat message for a specific user.
     """
 
-    chat_history.append(
+    if user_id not in chat_history:
+        chat_history[user_id] = []
+
+    chat_history[user_id].append(
         {
             "role": role,
             "content": content
@@ -14,17 +18,21 @@ def add_message(role, content):
     )
 
 
-def get_history(limit=10):
+def get_history(user_id, limit=10):
     """
-    Return the last N messages.
-    """
-
-    return chat_history[-limit:]
-
-
-def clear_history():
-    """
-    Remove all chat history.
+    Return the last N messages for a specific user.
     """
 
-    chat_history.clear()
+    if user_id not in chat_history:
+        return []
+
+    return chat_history[user_id][-limit:]
+
+
+def clear_history(user_id):
+    """
+    Remove chat history for a specific user.
+    """
+
+    if user_id in chat_history:
+        chat_history[user_id].clear()

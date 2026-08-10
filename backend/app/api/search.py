@@ -28,7 +28,7 @@ def search(
     )
 
     # ==========================================
-    # Search Qdrant for this user
+    # Search Qdrant ONLY for this user
     # ==========================================
 
     results = search_embeddings(
@@ -38,7 +38,7 @@ def search(
     )
 
     # ==========================================
-    # Build context for Llama
+    # Build context
     # ==========================================
 
     context_parts = []
@@ -48,14 +48,25 @@ def search(
         payload = result.payload or {}
 
         # --------------------------------------
-        # Memory
+        # Saved memory
         # --------------------------------------
 
         if payload.get("type") == "memory":
 
-            title = payload.get("title", "")
-            content = payload.get("content", "")
-            tags = payload.get("tags", [])
+            title = payload.get(
+                "title",
+                ""
+            )
+
+            content = payload.get(
+                "content",
+                ""
+            )
+
+            tags = payload.get(
+                "tags",
+                []
+            )
 
             context_parts.append(
                 f"""
@@ -73,7 +84,7 @@ Tags:
             )
 
         # --------------------------------------
-        # PDF document
+        # Uploaded document
         # --------------------------------------
 
         else:
@@ -113,12 +124,13 @@ Content:
     )
 
     # ==========================================
-    # Generate answer using Llama
+    # Generate answer
     # ==========================================
 
     answer = generate_answer(
-        request.question,
-        context
+        question=request.question,
+        context=context,
+        user_id=current_user.id
     )
 
     # ==========================================
@@ -141,7 +153,9 @@ Content:
                 {
                     "type": "memory",
                     "id": str(result.id),
-                    "title": payload.get("title"),
+                    "title": payload.get(
+                        "title"
+                    ),
                     "tags": payload.get(
                         "tags",
                         []
