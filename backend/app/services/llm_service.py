@@ -1,3 +1,4 @@
+
 from ollama import chat
 
 from app.services.chat_history import (
@@ -32,6 +33,7 @@ def generate_answer(
 You are a helpful AI assistant for a user's personal knowledge system.
 
 The provided context can contain:
+
 1. Uploaded documents
 2. Saved personal memories
 
@@ -72,12 +74,26 @@ Context:
     # Generate answer using Llama
     # ==========================================
 
-    response = chat(
-        model="llama3.2",
-        messages=messages
-    )
+    try:
 
-    answer = response["message"]["content"]
+        response = chat(
+            model="llama3.2",
+            messages=messages
+        )
+
+        answer = response["message"]["content"]
+
+    except Exception as error:
+
+        print(
+            f"Ollama error: {error}"
+        )
+
+        return (
+            "The AI service is currently unavailable. "
+            "Please make sure Ollama is running and "
+            "the Llama model is available."
+        )
 
     # ==========================================
     # Save conversation for THIS user only

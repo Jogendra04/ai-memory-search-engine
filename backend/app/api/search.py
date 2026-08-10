@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends
+
+from fastapi import APIRouter, Depends, HTTPException
 
 from app.models.schemas import ChatRequest
 from app.models.user import User
@@ -7,7 +8,10 @@ from app.core.dependencies import get_current_user
 
 from app.services.embedding_service import create_embedding
 from app.services.llm_service import generate_answer
-from app.services.qdrant_service import search_embeddings
+from app.services.qdrant_service import (
+    search_embeddings,
+    QdrantServiceError
+)
 
 
 router = APIRouter()
@@ -20,22 +24,64 @@ def search(
 ):
 
     # ==========================================
+    # Validate question
+    # ==========================================
+
+    question = request.question.strip()
+
+    if not question:
+
+        raise HTTPException(
+            status_code=400,
+            detail="Please enter a question."
+        )
+
+    # ==========================================
     # Create embedding for the user's question
     # ==========================================
 
-    query_embedding = create_embedding(
-        request.question
-    )
+    try:
+
+        query_embedding = create_embedding(
+            question
+        )
+
+    except Exception as error:
+
+        print(
+            f"Embedding error: {error}"
+        )
+
+        raise HTTPException(
+            status_code=503,
+            detail=(
+                "Unable to process your question. "
+                "Please try again."
+            )
+        ) from error
 
     # ==========================================
     # Search Qdrant ONLY for this user
     # ==========================================
 
-    results = search_embeddings(
-        query_embedding=query_embedding,
-        user_id=current_user.id,
-        limit=5
-    )
+    try:
+
+        results = search_embeddings(
+            query_embedding=query_embedding,
+            user_id=current_user.id,
+            limit=5
+        )
+
+    except QdrantServiceError as error:
+
+        print(
+            f"Search database error: {error}"
+        )
+
+        raise HTTPException(
+            status_code=503,
+            detail=str(error)
+        ) from error
 
     # ==========================================
     # Build context
@@ -124,14 +170,30 @@ Content:
     )
 
     # ==========================================
-    # Generate answer
+    # Generate answer using Llama
     # ==========================================
 
-    answer = generate_answer(
-        question=request.question,
-        context=context,
-        user_id=current_user.id
-    )
+    try:
+
+        answer = generate_answer(
+            question=question,
+            context=context,
+            user_id=current_user.id
+        )
+
+    except Exception as error:
+
+        print(
+            f"LLM error: {error}"
+        )
+
+        raise HTTPException(
+            status_code=503,
+            detail=(
+                "The AI service is currently "
+                "unavailable. Please try again."
+            )
+        ) from error
 
     # ==========================================
     # Build sources
@@ -189,7 +251,7 @@ Content:
     # ==========================================
 
     return {
-        "question": request.question,
+        "question": question,
         "answer": answer,
         "sources": sources
     }

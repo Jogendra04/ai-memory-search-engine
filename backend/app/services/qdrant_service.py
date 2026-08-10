@@ -1,3 +1,4 @@
+
 import os
 import uuid
 
@@ -42,8 +43,19 @@ client = QdrantClient(
     url=QDRANT_URL
 )
 
-
 COLLECTION_NAME = "memory_documents"
+
+
+# ==========================
+# Custom Qdrant Error
+# ==========================
+
+class QdrantServiceError(Exception):
+    """
+    Raised when the Qdrant service is unavailable
+    or an operation fails.
+    """
+    pass
 
 
 # ==========================
@@ -52,32 +64,44 @@ COLLECTION_NAME = "memory_documents"
 
 def create_collection():
 
-    collections = client.get_collections()
+    try:
 
-    existing_collections = [
-        collection.name
-        for collection in collections.collections
-    ]
+        collections = client.get_collections()
 
-    if COLLECTION_NAME not in existing_collections:
+        existing_collections = [
+            collection.name
+            for collection in collections.collections
+        ]
 
-        client.create_collection(
-            collection_name=COLLECTION_NAME,
-            vectors_config=VectorParams(
-                size=768,
-                distance=Distance.COSINE
+        if COLLECTION_NAME not in existing_collections:
+
+            client.create_collection(
+                collection_name=COLLECTION_NAME,
+                vectors_config=VectorParams(
+                    size=768,
+                    distance=Distance.COSINE
+                )
             )
-        )
+
+            print(
+                f"Collection '{COLLECTION_NAME}' created!"
+            )
+
+        else:
+
+            print(
+                f"Collection '{COLLECTION_NAME}' already exists."
+            )
+
+    except Exception as error:
 
         print(
-            f"Collection '{COLLECTION_NAME}' created!"
+            f"Qdrant collection error: {error}"
         )
 
-    else:
-
-        print(
-            f"Collection '{COLLECTION_NAME}' already exists."
-        )
+        raise QdrantServiceError(
+            "Unable to connect to the search database."
+        ) from error
 
 
 # ==========================
@@ -93,26 +117,38 @@ def store_embedding(
     user_id
 ):
 
-    client.upsert(
-        collection_name=COLLECTION_NAME,
-        points=[
-            PointStruct(
-                id=str(uuid.uuid4()),
-                vector=embedding,
-                payload={
-                    "user_id": user_id,
-                    "filename": filename,
-                    "text": text,
-                    "chunk_number": chunk_number,
-                    "file_hash": file_hash
-                }
-            )
-        ]
-    )
+    try:
 
-    print(
-        f"Stored chunk {chunk_number} from {filename}"
-    )
+        client.upsert(
+            collection_name=COLLECTION_NAME,
+            points=[
+                PointStruct(
+                    id=str(uuid.uuid4()),
+                    vector=embedding,
+                    payload={
+                        "user_id": user_id,
+                        "filename": filename,
+                        "text": text,
+                        "chunk_number": chunk_number,
+                        "file_hash": file_hash
+                    }
+                )
+            ]
+        )
+
+        print(
+            f"Stored chunk {chunk_number} from {filename}"
+        )
+
+    except Exception as error:
+
+        print(
+            f"Qdrant document storage error: {error}"
+        )
+
+        raise QdrantServiceError(
+            "Unable to store the document in the search database."
+        ) from error
 
 
 # ==========================
@@ -130,26 +166,38 @@ def store_memory(
     if tags is None:
         tags = []
 
-    client.upsert(
-        collection_name=COLLECTION_NAME,
-        points=[
-            PointStruct(
-                id=str(uuid.uuid4()),
-                vector=embedding,
-                payload={
-                    "type": "memory",
-                    "user_id": user_id,
-                    "title": title,
-                    "content": content,
-                    "tags": tags
-                }
-            )
-        ]
-    )
+    try:
 
-    print(
-        f"Stored memory: {title}"
-    )
+        client.upsert(
+            collection_name=COLLECTION_NAME,
+            points=[
+                PointStruct(
+                    id=str(uuid.uuid4()),
+                    vector=embedding,
+                    payload={
+                        "type": "memory",
+                        "user_id": user_id,
+                        "title": title,
+                        "content": content,
+                        "tags": tags
+                    }
+                )
+            ]
+        )
+
+        print(
+            f"Stored memory: {title}"
+        )
+
+    except Exception as error:
+
+        print(
+            f"Qdrant memory storage error: {error}"
+        )
+
+        raise QdrantServiceError(
+            "Unable to save the memory in the search database."
+        ) from error
 
 
 # ==========================
@@ -162,23 +210,35 @@ def search_embeddings(
     limit=5
 ):
 
-    results = client.query_points(
-        collection_name=COLLECTION_NAME,
-        query=query_embedding,
-        query_filter=Filter(
-            must=[
-                FieldCondition(
-                    key="user_id",
-                    match=MatchValue(
-                        value=user_id
-                    )
-                )
-            ]
-        ),
-        limit=limit
-    )
+    try:
 
-    return results.points
+        results = client.query_points(
+            collection_name=COLLECTION_NAME,
+            query=query_embedding,
+            query_filter=Filter(
+                must=[
+                    FieldCondition(
+                        key="user_id",
+                        match=MatchValue(
+                            value=user_id
+                        )
+                    )
+                ]
+            ),
+            limit=limit
+        )
+
+        return results.points
+
+    except Exception as error:
+
+        print(
+            f"Qdrant search error: {error}"
+        )
+
+        raise QdrantServiceError(
+            "Unable to search your documents and memories."
+        ) from error
 
 
 # ==========================
@@ -187,27 +247,39 @@ def search_embeddings(
 
 def get_all_memories(user_id):
 
-    results = client.scroll(
-        collection_name=COLLECTION_NAME,
-        limit=100,
-        with_payload=True,
-        with_vectors=False
-    )
+    try:
 
-    points = results[0]
+        results = client.scroll(
+            collection_name=COLLECTION_NAME,
+            limit=100,
+            with_payload=True,
+            with_vectors=False
+        )
 
-    user_memories = []
+        points = results[0]
 
-    for point in points:
+        user_memories = []
 
-        payload = point.payload or {}
+        for point in points:
 
-        if payload.get("user_id") != user_id:
-            continue
+            payload = point.payload or {}
 
-        user_memories.append(point)
+            if payload.get("user_id") != user_id:
+                continue
 
-    return user_memories
+            user_memories.append(point)
+
+        return user_memories
+
+    except Exception as error:
+
+        print(
+            f"Qdrant memory retrieval error: {error}"
+        )
+
+        raise QdrantServiceError(
+            "Unable to load your memories."
+        ) from error
 
 
 # ==========================
@@ -219,34 +291,46 @@ def delete_memory(
     user_id
 ):
 
-    # Make sure the memory belongs to
-    # the current user before deleting.
+    try:
 
-    results = client.retrieve(
-        collection_name=COLLECTION_NAME,
-        ids=[memory_id],
-        with_payload=True,
-        with_vectors=False
-    )
+        # Make sure the memory belongs
+        # to the current user.
 
-    if not results:
-        return False
+        results = client.retrieve(
+            collection_name=COLLECTION_NAME,
+            ids=[memory_id],
+            with_payload=True,
+            with_vectors=False
+        )
 
-    payload = results[0].payload or {}
+        if not results:
+            return False
 
-    if payload.get("user_id") != user_id:
-        return False
+        payload = results[0].payload or {}
 
-    client.delete(
-        collection_name=COLLECTION_NAME,
-        points_selector=[memory_id]
-    )
+        if payload.get("user_id") != user_id:
+            return False
 
-    print(
-        f"Deleted memory: {memory_id}"
-    )
+        client.delete(
+            collection_name=COLLECTION_NAME,
+            points_selector=[memory_id]
+        )
 
-    return True
+        print(
+            f"Deleted memory: {memory_id}"
+        )
+
+        return True
+
+    except Exception as error:
+
+        print(
+            f"Qdrant memory deletion error: {error}"
+        )
+
+        raise QdrantServiceError(
+            "Unable to delete the memory."
+        ) from error
 
 
 # ==========================
@@ -255,43 +339,55 @@ def delete_memory(
 
 def get_documents(user_id):
 
-    results = client.scroll(
-        collection_name=COLLECTION_NAME,
-        limit=1000,
-        with_payload=True,
-        with_vectors=False
-    )
+    try:
 
-    points = results[0]
-
-    documents = {}
-
-    for point in points:
-
-        payload = point.payload or {}
-
-        if payload.get("user_id") != user_id:
-            continue
-
-        if payload.get("type") == "memory":
-            continue
-
-        filename = payload.get("filename")
-
-        if not filename:
-            continue
-
-        documents[filename] = (
-            documents.get(filename, 0) + 1
+        results = client.scroll(
+            collection_name=COLLECTION_NAME,
+            limit=1000,
+            with_payload=True,
+            with_vectors=False
         )
 
-    return [
-        {
-            "filename": filename,
-            "chunks": chunks
-        }
-        for filename, chunks in documents.items()
-    ]
+        points = results[0]
+
+        documents = {}
+
+        for point in points:
+
+            payload = point.payload or {}
+
+            if payload.get("user_id") != user_id:
+                continue
+
+            if payload.get("type") == "memory":
+                continue
+
+            filename = payload.get("filename")
+
+            if not filename:
+                continue
+
+            documents[filename] = (
+                documents.get(filename, 0) + 1
+            )
+
+        return [
+            {
+                "filename": filename,
+                "chunks": chunks
+            }
+            for filename, chunks in documents.items()
+        ]
+
+    except Exception as error:
+
+        print(
+            f"Qdrant document retrieval error: {error}"
+        )
+
+        raise QdrantServiceError(
+            "Unable to load your documents."
+        ) from error
 
 
 # ==========================
@@ -303,40 +399,52 @@ def delete_document(
     user_id
 ):
 
-    results = client.scroll(
-        collection_name=COLLECTION_NAME,
-        limit=1000,
-        with_payload=True,
-        with_vectors=False
-    )
+    try:
 
-    points = results[0]
-
-    ids_to_delete = []
-
-    for point in points:
-
-        payload = point.payload or {}
-
-        if (
-            payload.get("filename") == filename
-            and payload.get("user_id") == user_id
-        ):
-            ids_to_delete.append(point.id)
-
-    if ids_to_delete:
-
-        client.delete(
+        results = client.scroll(
             collection_name=COLLECTION_NAME,
-            points_selector=ids_to_delete
+            limit=1000,
+            with_payload=True,
+            with_vectors=False
         )
+
+        points = results[0]
+
+        ids_to_delete = []
+
+        for point in points:
+
+            payload = point.payload or {}
+
+            if (
+                payload.get("filename") == filename
+                and payload.get("user_id") == user_id
+            ):
+                ids_to_delete.append(point.id)
+
+        if ids_to_delete:
+
+            client.delete(
+                collection_name=COLLECTION_NAME,
+                points_selector=ids_to_delete
+            )
+
+            print(
+                f"Deleted {len(ids_to_delete)} "
+                f"chunks from {filename}"
+            )
+
+        return len(ids_to_delete)
+
+    except Exception as error:
 
         print(
-            f"Deleted {len(ids_to_delete)} "
-            f"chunks from {filename}"
+            f"Qdrant document deletion error: {error}"
         )
 
-    return len(ids_to_delete)
+        raise QdrantServiceError(
+            "Unable to delete the document."
+        ) from error
 
 
 # ==========================
@@ -348,23 +456,35 @@ def document_exists(
     user_id
 ):
 
-    results = client.scroll(
-        collection_name=COLLECTION_NAME,
-        limit=1000,
-        with_payload=True,
-        with_vectors=False
-    )
+    try:
 
-    points = results[0]
+        results = client.scroll(
+            collection_name=COLLECTION_NAME,
+            limit=1000,
+            with_payload=True,
+            with_vectors=False
+        )
 
-    for point in points:
+        points = results[0]
 
-        payload = point.payload or {}
+        for point in points:
 
-        if (
-            payload.get("file_hash") == file_hash
-            and payload.get("user_id") == user_id
-        ):
-            return True
+            payload = point.payload or {}
 
-    return False
+            if (
+                payload.get("file_hash") == file_hash
+                and payload.get("user_id") == user_id
+            ):
+                return True
+
+        return False
+
+    except Exception as error:
+
+        print(
+            f"Qdrant document check error: {error}"
+        )
+
+        raise QdrantServiceError(
+            "Unable to check the document."
+        ) from error
