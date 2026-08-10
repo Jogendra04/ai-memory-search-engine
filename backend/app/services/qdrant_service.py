@@ -1,3 +1,8 @@
+import os
+import uuid
+
+from dotenv import load_dotenv
+
 from qdrant_client import QdrantClient  # type: ignore[import]
 from qdrant_client.models import (
     Distance,
@@ -7,19 +12,44 @@ from qdrant_client.models import (
     FieldCondition,
     MatchValue,
 )
-import uuid
 
 
-# Connect to Qdrant running in Docker
+# ==========================
+# Load Environment Variables
+# ==========================
+
+load_dotenv()
+
+
+# ==========================
+# Qdrant Configuration
+# ==========================
+
+QDRANT_URL = os.getenv("QDRANT_URL")
+
+if QDRANT_URL is None:
+    raise RuntimeError(
+        "QDRANT_URL is not configured. "
+        "Please add QDRANT_URL to your .env file."
+    )
+
+
+# ==========================
+# Connect to Qdrant
+# ==========================
+
 client = QdrantClient(
-    url="http://localhost:6333"
+    url=QDRANT_URL
 )
 
 
 COLLECTION_NAME = "memory_documents"
 
 
-# Create collection if it doesn't exist
+# ==========================
+# Create Collection
+# ==========================
+
 def create_collection():
 
     collections = client.get_collections()
@@ -39,13 +69,21 @@ def create_collection():
             )
         )
 
-        print(f"Collection '{COLLECTION_NAME}' created!")
+        print(
+            f"Collection '{COLLECTION_NAME}' created!"
+        )
 
     else:
-        print(f"Collection '{COLLECTION_NAME}' already exists.")
+
+        print(
+            f"Collection '{COLLECTION_NAME}' already exists."
+        )
 
 
-# Store an embedding
+# ==========================
+# Store Document Embedding
+# ==========================
+
 def store_embedding(
     text,
     embedding,
@@ -72,10 +110,15 @@ def store_embedding(
         ]
     )
 
-    print(f"Stored chunk {chunk_number} from {filename}")
+    print(
+        f"Stored chunk {chunk_number} from {filename}"
+    )
 
 
-# Store a memory
+# ==========================
+# Store Memory
+# ==========================
+
 def store_memory(
     title,
     content,
@@ -104,10 +147,15 @@ def store_memory(
         ]
     )
 
-    print(f"Stored memory: {title}")
+    print(
+        f"Stored memory: {title}"
+    )
 
 
-# Search embeddings
+# ==========================
+# Search Embeddings
+# ==========================
+
 def search_embeddings(
     query_embedding,
     user_id,
@@ -121,7 +169,9 @@ def search_embeddings(
             must=[
                 FieldCondition(
                     key="user_id",
-                    match=MatchValue(value=user_id)
+                    match=MatchValue(
+                        value=user_id
+                    )
                 )
             ]
         ),
@@ -131,7 +181,10 @@ def search_embeddings(
     return results.points
 
 
-# Get all memories/documents
+# ==========================
+# Get All Memories/Documents
+# ==========================
+
 def get_all_memories(user_id):
 
     results = client.scroll(
@@ -157,18 +210,49 @@ def get_all_memories(user_id):
     return user_memories
 
 
-# Delete memory
-def delete_memory(memory_id, user_id):
+# ==========================
+# Delete Memory
+# ==========================
+
+def delete_memory(
+    memory_id,
+    user_id
+):
+
+    # Make sure the memory belongs to
+    # the current user before deleting.
+
+    results = client.retrieve(
+        collection_name=COLLECTION_NAME,
+        ids=[memory_id],
+        with_payload=True,
+        with_vectors=False
+    )
+
+    if not results:
+        return False
+
+    payload = results[0].payload or {}
+
+    if payload.get("user_id") != user_id:
+        return False
 
     client.delete(
         collection_name=COLLECTION_NAME,
         points_selector=[memory_id]
     )
 
-    print(f"Deleted memory: {memory_id}")
+    print(
+        f"Deleted memory: {memory_id}"
+    )
+
+    return True
 
 
-# Get uploaded documents
+# ==========================
+# Get Uploaded Documents
+# ==========================
+
 def get_documents(user_id):
 
     results = client.scroll(
@@ -197,7 +281,9 @@ def get_documents(user_id):
         if not filename:
             continue
 
-        documents[filename] = documents.get(filename, 0) + 1
+        documents[filename] = (
+            documents.get(filename, 0) + 1
+        )
 
     return [
         {
@@ -208,8 +294,14 @@ def get_documents(user_id):
     ]
 
 
-# Delete document
-def delete_document(filename, user_id):
+# ==========================
+# Delete Document
+# ==========================
+
+def delete_document(
+    filename,
+    user_id
+):
 
     results = client.scroll(
         collection_name=COLLECTION_NAME,
@@ -239,13 +331,22 @@ def delete_document(filename, user_id):
             points_selector=ids_to_delete
         )
 
-        print(f"Deleted {len(ids_to_delete)} chunks from {filename}")
+        print(
+            f"Deleted {len(ids_to_delete)} "
+            f"chunks from {filename}"
+        )
 
     return len(ids_to_delete)
 
 
-# Check if document already exists
-def document_exists(file_hash, user_id):
+# ==========================
+# Check If Document Exists
+# ==========================
+
+def document_exists(
+    file_hash,
+    user_id
+):
 
     results = client.scroll(
         collection_name=COLLECTION_NAME,
