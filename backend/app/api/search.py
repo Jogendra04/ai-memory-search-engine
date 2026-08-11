@@ -1,4 +1,3 @@
-
 from fastapi import APIRouter, Depends, HTTPException
 
 from app.models.schemas import ChatRequest
@@ -12,9 +11,71 @@ from app.services.qdrant_service import (
     search_embeddings,
     QdrantServiceError
 )
-
+from app.services.query_service import build_search_query
+from app.services.retrieval_service import rerank_results
 
 router = APIRouter()
+
+
+# ==========================================
+# Filter and diversify search results
+# ==========================================
+
+def filter_results(
+    results,
+    max_chunks_per_document=2
+):
+    """
+    Prevent one document from dominating
+    the retrieved context.
+
+    Memories are always kept.
+    Documents are limited to a maximum
+    number of chunks.
+    """
+
+    filtered_results = []
+
+    document_counts = {}
+
+    for result in results:
+
+        payload = result.payload or {}
+
+        # --------------------------------------
+        # Saved memories
+        # --------------------------------------
+
+        if payload.get("type") == "memory":
+
+            filtered_results.append(result)
+
+            continue
+
+        # --------------------------------------
+        # Uploaded documents
+        # --------------------------------------
+
+        filename = payload.get(
+            "filename",
+            "Unknown document"
+        )
+
+        current_count = document_counts.get(
+            filename,
+            0
+        )
+
+        if current_count >= max_chunks_per_document:
+            continue
+
+        filtered_results.append(result)
+
+        document_counts[filename] = (
+            current_count + 1
+        )
+
+    return filtered_results
 
 
 @router.post("/search")
@@ -37,13 +98,18 @@ def search(
         )
 
     # ==========================================
-    # Create embedding for the user's question
+    # Build conversation-aware search query
     # ==========================================
 
     try:
 
+        search_query = build_search_query(
+            question=question,
+            user_id=current_user.id
+        )
+
         query_embedding = create_embedding(
-            question
+            search_query
         )
 
     except Exception as error:
@@ -66,10 +132,14 @@ def search(
 
     try:
 
+        # Retrieve more candidates than we finally use.
+        # This gives the diversification step
+        # enough results to work with.
+
         results = search_embeddings(
             query_embedding=query_embedding,
             user_id=current_user.id,
-            limit=5
+            limit=10
         )
 
     except QdrantServiceError as error:
@@ -82,6 +152,20 @@ def search(
             status_code=503,
             detail=str(error)
         ) from error
+
+    # ==========================================
+    # Diversify search results
+    # ==========================================
+
+    results = filter_results(results, max_chunks_per_document=2)
+
+    # ==========================================
+    # Re-rank results
+    # ==========================================
+
+    results = rerank_results(results=results, question=question, max_results=5)
+
+
 
     # ==========================================
     # Build context
