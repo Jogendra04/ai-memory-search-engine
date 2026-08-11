@@ -13,6 +13,10 @@ from app.services.qdrant_service import (
 )
 from app.services.query_service import build_search_query
 from app.services.retrieval_service import rerank_results
+from app.services.chat_history import (
+    get_history,
+    clear_history
+)
 
 router = APIRouter()
 
@@ -338,4 +342,39 @@ Content:
         "question": question,
         "answer": answer,
         "sources": sources
+    }
+
+# ==========================================
+# Get Chat History
+# ==========================================
+
+@router.get("/chat/history")
+def get_chat_history(
+    current_user: User = Depends(get_current_user)
+):
+
+    history = get_history(
+        user_id=current_user.id,
+        limit=50
+    )
+
+    return {
+        "history": history
+    }
+
+# ==========================================
+# Clear Chat History
+# ==========================================
+
+@router.delete("/chat/history")
+def delete_chat_history(
+    current_user: User = Depends(get_current_user)
+):
+
+    clear_history(
+        user_id=current_user.id
+    )
+
+    return {
+        "message": "Chat history cleared successfully."
     }

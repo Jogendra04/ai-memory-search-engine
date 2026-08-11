@@ -40,6 +40,31 @@ export async function search(question) {
 
   return handleResponse(response);
 }
+export async function getChatHistory() {
+  const response = await fetch(
+    `${API_URL}/chat/history`,
+    {
+      headers: {
+        ...getAuthHeaders(),
+      },
+    }
+  );
+
+  return handleResponse(response);
+}
+export async function clearChatHistory() {
+  const response = await fetch(
+    `${API_URL}/chat/history`,
+    {
+      method: "DELETE",
+      headers: {
+        ...getAuthHeaders(),
+      },
+    }
+  );
+
+  return handleResponse(response);
+}
 
 // =====================================
 // DOCUMENTS

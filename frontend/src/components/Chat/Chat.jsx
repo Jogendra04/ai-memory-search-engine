@@ -1,18 +1,105 @@
+import { useEffect, useState } from "react";
 
-import { useState } from "react";
-import { search } from "../../services/api";
+import {
+  search,
+  getChatHistory,
+  clearChatHistory,
+} from "../../services/api";
 
 function Chat() {
-  const [messages, setMessages] = useState([
-    {
-      sender: "AI",
-      text: "Welcome! Ask me anything about your documents or memories.",
-      sources: [],
-    },
-  ]);
-
+  const [messages, setMessages] = useState([]);
   const [question, setQuestion] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // ==========================================
+  // Load Chat History
+  // ==========================================
+
+  useEffect(() => {
+    const loadChatHistory = async () => {
+      try {
+        const data = await getChatHistory();
+
+        const history = data.history || [];
+
+        const formattedMessages = history.map((message) => ({
+          sender:
+            message.role === "user"
+              ? "You"
+              : "AI",
+
+          text: message.content,
+
+          sources: [],
+        }));
+
+        if (formattedMessages.length > 0) {
+          setMessages(formattedMessages);
+        } else {
+          setMessages([
+            {
+              sender: "AI",
+              text: "Welcome! Ask me anything about your documents or memories.",
+              sources: [],
+            },
+          ]);
+        }
+      } catch (error) {
+        console.error(
+          "Failed to load chat history:",
+          error
+        );
+
+        setMessages([
+          {
+            sender: "AI",
+            text: "Welcome! Ask me anything about your documents or memories.",
+            sources: [],
+          },
+        ]);
+      }
+    };
+
+    loadChatHistory();
+  }, []);
+
+  // ==========================================
+  // Clear Chat History
+  // ==========================================
+
+  const handleClearChat = async () => {
+    const confirmed = window.confirm(
+      "Are you sure you want to clear your chat history?"
+    );
+
+    if (!confirmed) return;
+
+    try {
+      await clearChatHistory();
+
+      setMessages([
+        {
+          sender: "AI",
+          text: "Welcome! Ask me anything about your documents or memories.",
+          sources: [],
+        },
+      ]);
+    } catch (error) {
+      console.error(
+        "Failed to clear chat history:",
+        error
+      );
+
+      alert(
+        error.message ||
+          "Failed to clear chat history."
+      );
+    }
+  };
+
+  // ==========================================
+  // Send Message
+  // ==========================================
 
   const sendMessage = async () => {
     if (!question.trim() || loading) return;
@@ -58,11 +145,19 @@ function Chat() {
     }
   };
 
+  // ==========================================
+  // Enter Key
+  // ==========================================
+
   const handleKeyDown = (e) => {
     if (e.key === "Enter") {
       sendMessage();
     }
   };
+
+  // ==========================================
+  // Render Sources
+  // ==========================================
 
   const renderSource = (source, index) => {
     const score =
@@ -70,13 +165,16 @@ function Chat() {
         ? `${Math.round(source.score * 100)}%`
         : "N/A";
 
-    // ==========================================
+    // ========================================
     // Saved Memory
-    // ==========================================
+    // ========================================
 
     if (source.type === "memory") {
       return (
-        <div className="source-card memory-source" key={index}>
+        <div
+          className="source-card memory-source"
+          key={index}
+        >
           <div className="source-type">
             🧠 Saved Memory
           </div>
@@ -105,9 +203,9 @@ function Chat() {
       );
     }
 
-    // ==========================================
+    // ========================================
     // Uploaded Document
-    // ==========================================
+    // ========================================
 
     return (
       <div
@@ -133,9 +231,22 @@ function Chat() {
     );
   };
 
+  // ==========================================
+  // UI
+  // ==========================================
+
   return (
     <div>
-      <h2>Ask Your AI</h2>
+      <div className="chat-header">
+        <h2>Ask Your AI</h2>
+
+        <button
+          onClick={handleClearChat}
+          className="clear-chat-button"
+        >
+          Clear Chat
+        </button>
+      </div>
 
       <div className="chat-container">
         {messages.map((message, index) => (
