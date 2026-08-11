@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { uploadDocument } from "../../services/api";
 
@@ -16,8 +17,24 @@ function DocumentUpload({ onUploadSuccess }) {
       return;
     }
 
-    if (file.type !== "application/pdf") {
-      setUploadMessage("Please select a PDF file.");
+    const allowedExtensions = [
+      ".pdf",
+      ".txt",
+      ".docx",
+      ".csv",
+      ".md",
+    ];
+
+    const filename = file.name.toLowerCase();
+
+    const isAllowed = allowedExtensions.some(
+      (extension) => filename.endsWith(extension)
+    );
+
+    if (!isAllowed) {
+      setUploadMessage(
+        "Please select a PDF, TXT, DOCX, CSV, or MD file."
+      );
       setSelectedFile(null);
       return;
     }
@@ -27,7 +44,9 @@ function DocumentUpload({ onUploadSuccess }) {
 
   const handleUpload = async () => {
     if (!selectedFile) {
-      setUploadMessage("Please select a PDF file.");
+      setUploadMessage(
+        "Please select a PDF, TXT, DOCX, CSV, or MD file."
+      );
       return;
     }
 
@@ -42,7 +61,9 @@ function DocumentUpload({ onUploadSuccess }) {
 
       setSelectedFile(null);
 
-      const input = document.getElementById("pdf-upload");
+      const input = document.getElementById(
+        "document-upload"
+      );
 
       if (input) {
         input.value = "";
@@ -54,39 +75,49 @@ function DocumentUpload({ onUploadSuccess }) {
 
     } catch (error) {
       console.error(error);
-      setUploadMessage("Upload failed.");
-    }
 
-    setUploadLoading(false);
+      setUploadMessage(
+        error.message || "Upload failed."
+      );
+
+    } finally {
+      setUploadLoading(false);
+    }
   };
 
   return (
-    <div className="upload-section">
-
+    <div>
       <h2>Documents</h2>
 
       <input
-        id="pdf-upload"
+        id="document-upload"
         type="file"
-        accept=".pdf"
+        accept=".pdf,.txt,.docx,.csv,.md"
         onChange={handleFileChange}
       />
 
+      <p>
+        Supported files: PDF, TXT, DOCX, CSV, MD
+      </p>
+
       {selectedFile && (
-        <p>Selected: {selectedFile.name}</p>
+        <p>
+          Selected: {selectedFile.name}
+        </p>
       )}
 
       <button
         onClick={handleUpload}
         disabled={uploadLoading}
       >
-        {uploadLoading ? "Processing..." : "Upload Document"}
+        {uploadLoading
+          ? "Processing..."
+          : "Upload Document"}
       </button>
 
       {uploadMessage && (
         <p>{uploadMessage}</p>
       )}
-
     </div>
   );
 }
