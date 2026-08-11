@@ -1,38 +1,96 @@
-# Store chat history separately for each user
-chat_history = {}
+from app.database.database import SessionLocal
+from app.models.chat_message import ChatMessage
 
+
+# ==========================================
+# Save Chat Message
+# ==========================================
 
 def add_message(user_id, role, content):
-    """
-    Save a chat message for a specific user.
-    """
 
-    if user_id not in chat_history:
-        chat_history[user_id] = []
+    db = SessionLocal()
 
-    chat_history[user_id].append(
-        {
-            "role": role,
-            "content": content
-        }
-    )
+    try:
 
+        message = ChatMessage(
+            user_id=user_id,
+            role=role,
+            content=content
+        )
+
+        db.add(message)
+
+        db.commit()
+
+        print(
+            f"Saved chat message: user_id={user_id}, role={role}"
+        )
+
+    finally:
+        db.close()
+
+
+# ==========================================
+# Get Chat History
+# ==========================================
 
 def get_history(user_id, limit=10):
-    """
-    Return the last N messages for a specific user.
-    """
 
-    if user_id not in chat_history:
-        return []
+    db = SessionLocal()
 
-    return chat_history[user_id][-limit:]
+    try:
 
+        messages = (
+            db.query(ChatMessage)
+            .filter(
+                ChatMessage.user_id == user_id
+            )
+            .order_by(
+                ChatMessage.id.desc()
+            )
+            .limit(limit)
+            .all()
+        )
+
+        messages.reverse()
+
+        print(
+            f"Loaded chat history: user_id={user_id}, "
+            f"messages={len(messages)}"
+        )
+
+        return [
+            {
+                "role": message.role,
+                "content": message.content
+            }
+            for message in messages
+        ]
+
+    finally:
+        db.close()
+
+
+# ==========================================
+# Clear Chat History
+# ==========================================
 
 def clear_history(user_id):
     """
-    Remove chat history for a specific user.
+    Remove all chat history
+    for a specific user.
     """
 
-    if user_id in chat_history:
-        chat_history[user_id].clear()
+    db = SessionLocal()
+
+    try:
+
+        db.query(ChatMessage).filter(
+            ChatMessage.user_id == user_id
+        ).delete()
+
+        db.commit()
+
+    finally:
+
+        db.close()

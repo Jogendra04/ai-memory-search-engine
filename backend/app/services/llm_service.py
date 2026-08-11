@@ -59,6 +59,13 @@ Context:
 
     messages.extend(history)
 
+    print("\n========== PREVIOUS HISTORY ==========")
+
+    for message in history:
+
+        print(f"{message['role']}: {message['content']}")
+    print("======================================\n")
+
     # ==========================================
     # Add current question
     # ==========================================

@@ -5,6 +5,7 @@ from app.database.database import Base, engine
 
 # Import models so SQLAlchemy creates tables
 from app.models.user import User
+from app.models.chat_message import ChatMessage
 
 # Import routers
 from app.api.home import router as home_router

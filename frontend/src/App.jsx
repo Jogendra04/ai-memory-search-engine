@@ -5,13 +5,19 @@ import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
 
+
 function App() {
   return (
     <Routes>
 
       <Route
         path="/"
-        element={<Navigate to="/login" replace />}
+        element={
+          <Navigate
+            to="/login"
+            replace
+          />
+        }
       />
 
       <Route
@@ -36,5 +42,6 @@ function App() {
     </Routes>
   );
 }
+
 
 export default App;
