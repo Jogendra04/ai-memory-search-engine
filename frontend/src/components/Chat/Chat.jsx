@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { search } from "../../services/api";
 
@@ -52,9 +53,9 @@ function Chat() {
           sources: [],
         },
       ]);
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   const handleKeyDown = (e) => {
@@ -64,20 +65,24 @@ function Chat() {
   };
 
   const renderSource = (source, index) => {
+    const score =
+      source.score !== undefined
+        ? `${Math.round(source.score * 100)}%`
+        : "N/A";
 
-    const score = source.score
-      ? `${Math.round(source.score * 100)}%`
-      : "N/A";
+    // ==========================================
+    // Saved Memory
+    // ==========================================
 
     if (source.type === "memory") {
-
       return (
-        <div
-          className="source-card"
-          key={index}
-        >
+        <div className="source-card memory-source" key={index}>
+          <div className="source-type">
+            🧠 Saved Memory
+          </div>
+
           <div className="source-title">
-            🧠 {source.title}
+            {source.title}
           </div>
 
           {source.tags?.length > 0 && (
@@ -100,13 +105,21 @@ function Chat() {
       );
     }
 
+    // ==========================================
+    // Uploaded Document
+    // ==========================================
+
     return (
       <div
-        className="source-card"
+        className="source-card document-source"
         key={index}
       >
+        <div className="source-type">
+          📄 Uploaded Document
+        </div>
+
         <div className="source-title">
-          📄 {source.filename}
+          {source.filename}
         </div>
 
         <div className="source-chunk">
@@ -121,30 +134,32 @@ function Chat() {
   };
 
   return (
-    <div className="chat-section">
-
+    <div>
       <h2>Ask Your AI</h2>
 
       <div className="chat-container">
-
         {messages.map((message, index) => (
           <div
             className="message"
             key={index}
           >
-            <strong>{message.sender}:</strong>{" "}
+            <strong>
+              {message.sender}:
+            </strong>{" "}
             {message.text}
 
             {message.sender === "AI" &&
               message.sources?.length > 0 && (
                 <div className="sources">
-
                   <h4>Sources</h4>
 
-                  {message.sources.map((source, i) =>
-                    renderSource(source, i)
+                  {message.sources.map(
+                    (source, i) =>
+                      renderSource(
+                        source,
+                        i
+                      )
                   )}
-
                 </div>
               )}
           </div>
@@ -152,14 +167,13 @@ function Chat() {
 
         {loading && (
           <div className="message">
-            <strong>AI:</strong> Thinking...
+            <strong>AI:</strong>{" "}
+            Thinking...
           </div>
         )}
-
       </div>
 
       <div className="input-container">
-
         <input
           type="text"
           placeholder="Ask about your documents or memories..."
@@ -174,11 +188,11 @@ function Chat() {
           onClick={sendMessage}
           disabled={loading}
         >
-          {loading ? "Thinking..." : "Send"}
+          {loading
+            ? "Thinking..."
+            : "Send"}
         </button>
-
       </div>
-
     </div>
   );
 }
