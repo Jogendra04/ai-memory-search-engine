@@ -14,7 +14,7 @@ class ChatMessage(Base):
     )
 
     user_id = Column(
-        Integer,
+        String,
         ForeignKey("users.id"),
         nullable=False,
         index=True

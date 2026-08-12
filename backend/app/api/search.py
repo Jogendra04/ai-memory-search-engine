@@ -7,16 +7,20 @@ from app.core.dependencies import get_current_user
 
 from app.services.embedding_service import create_embedding
 from app.services.llm_service import generate_answer
+
 from app.services.qdrant_service import (
     search_embeddings,
     QdrantServiceError
 )
+
 from app.services.query_service import build_search_query
 from app.services.retrieval_service import rerank_results
+
 from app.services.chat_history import (
     get_history,
     clear_history
 )
+
 
 router = APIRouter()
 
@@ -82,6 +86,10 @@ def filter_results(
     return filtered_results
 
 
+# ==========================================
+# Search
+# ==========================================
+
 @router.post("/search")
 def search(
     request: ChatRequest,
@@ -136,10 +144,6 @@ def search(
 
     try:
 
-        # Retrieve more candidates than we finally use.
-        # This gives the diversification step
-        # enough results to work with.
-
         results = search_embeddings(
             query_embedding=query_embedding,
             user_id=current_user.id,
@@ -161,15 +165,20 @@ def search(
     # Diversify search results
     # ==========================================
 
-    results = filter_results(results, max_chunks_per_document=2)
+    results = filter_results(
+        results,
+        max_chunks_per_document=2
+    )
 
     # ==========================================
     # Re-rank results
     # ==========================================
 
-    results = rerank_results(results=results, question=question, max_results=5)
-
-
+    results = rerank_results(
+        results=results,
+        question=question,
+        max_results=5
+    )
 
     # ==========================================
     # Build context
@@ -258,33 +267,7 @@ Content:
     )
 
     # ==========================================
-    # Generate answer using Llama
-    # ==========================================
-
-    try:
-
-        answer = generate_answer(
-            question=question,
-            context=context,
-            user_id=current_user.id
-        )
-
-    except Exception as error:
-
-        print(
-            f"LLM error: {error}"
-        )
-
-        raise HTTPException(
-            status_code=503,
-            detail=(
-                "The AI service is currently "
-                "unavailable. Please try again."
-            )
-        ) from error
-
-    # ==========================================
-    # Build sources
+    # Build sources BEFORE generating answer
     # ==========================================
 
     sources = []
@@ -335,6 +318,33 @@ Content:
             )
 
     # ==========================================
+    # Generate answer using Llama
+    # ==========================================
+
+    try:
+
+        answer = generate_answer(
+            question=question,
+            context=context,
+            user_id=current_user.id,
+            sources=sources
+        )
+
+    except Exception as error:
+
+        print(
+            f"LLM error: {error}"
+        )
+
+        raise HTTPException(
+            status_code=503,
+            detail=(
+                "The AI service is currently "
+                "unavailable. Please try again."
+            )
+        ) from error
+
+    # ==========================================
     # Return response
     # ==========================================
 
@@ -343,6 +353,7 @@ Content:
         "answer": answer,
         "sources": sources
     }
+
 
 # ==========================================
 # Get Chat History
@@ -361,6 +372,7 @@ def get_chat_history(
     return {
         "history": history
     }
+
 
 # ==========================================
 # Clear Chat History

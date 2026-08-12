@@ -12,7 +12,7 @@ function Chat() {
   const [loading, setLoading] = useState(false);
 
   // ==========================================
-  // Load Chat History
+  // Load chat history
   // ==========================================
 
   useEffect(() => {
@@ -23,13 +23,8 @@ function Chat() {
         const history = data.history || [];
 
         const formattedMessages = history.map((message) => ({
-          sender:
-            message.role === "user"
-              ? "You"
-              : "AI",
-
+          sender: message.role === "user" ? "You" : "AI",
           text: message.content,
-
           sources: [],
         }));
 
@@ -45,10 +40,7 @@ function Chat() {
           ]);
         }
       } catch (error) {
-        console.error(
-          "Failed to load chat history:",
-          error
-        );
+        console.error("Failed to load chat history:", error);
 
         setMessages([
           {
@@ -64,7 +56,7 @@ function Chat() {
   }, []);
 
   // ==========================================
-  // Clear Chat History
+  // Clear chat history
   // ==========================================
 
   const handleClearChat = async () => {
@@ -85,20 +77,16 @@ function Chat() {
         },
       ]);
     } catch (error) {
-      console.error(
-        "Failed to clear chat history:",
-        error
-      );
+      console.error("Failed to clear chat history:", error);
 
       alert(
-        error.message ||
-          "Failed to clear chat history."
+        error.message || "Failed to clear chat history."
       );
     }
   };
 
   // ==========================================
-  // Send Message
+  // Send message
   // ==========================================
 
   const sendMessage = async () => {
@@ -146,7 +134,7 @@ function Chat() {
   };
 
   // ==========================================
-  // Enter Key
+  // Enter key
   // ==========================================
 
   const handleKeyDown = (e) => {
@@ -156,7 +144,7 @@ function Chat() {
   };
 
   // ==========================================
-  // Render Sources
+  // Render source
   // ==========================================
 
   const renderSource = (source, index) => {
@@ -165,9 +153,9 @@ function Chat() {
         ? `${Math.round(source.score * 100)}%`
         : "N/A";
 
-    // ========================================
+    // ----------------------------------------
     // Saved Memory
-    // ========================================
+    // ----------------------------------------
 
     if (source.type === "memory") {
       return (
@@ -203,9 +191,9 @@ function Chat() {
       );
     }
 
-    // ========================================
+    // ----------------------------------------
     // Uploaded Document
-    // ========================================
+    // ----------------------------------------
 
     return (
       <div
@@ -236,55 +224,116 @@ function Chat() {
   // ==========================================
 
   return (
-    <div>
+    <div className="chat-page">
+
       <div className="chat-header">
-        <h2>Ask Your AI</h2>
+        <div>
+          <h2>Ask Your AI</h2>
+
+          <p>
+            Search your documents and memories
+          </p>
+        </div>
 
         <button
-          onClick={handleClearChat}
           className="clear-chat-button"
+          onClick={handleClearChat}
+          disabled={loading}
         >
           Clear Chat
         </button>
       </div>
 
+      {/* ======================================
+          Chat Messages
+      ====================================== */}
+
       <div className="chat-container">
+
         {messages.map((message, index) => (
           <div
-            className="message"
             key={index}
+            className={`message-row ${
+              message.sender === "You"
+                ? "user-row"
+                : "ai-row"
+            }`}
           >
-            <strong>
-              {message.sender}:
-            </strong>{" "}
-            {message.text}
 
-            {message.sender === "AI" &&
-              message.sources?.length > 0 && (
-                <div className="sources">
-                  <h4>Sources</h4>
+            <div
+              className={`message ${
+                message.sender === "You"
+                  ? "user-message"
+                  : "ai-message"
+              }`}
+            >
 
-                  {message.sources.map(
-                    (source, i) =>
-                      renderSource(
-                        source,
-                        i
-                      )
-                  )}
-                </div>
-              )}
+              <div className="message-sender">
+                {message.sender === "You"
+                  ? "👤 You"
+                  : "🤖 AI"}
+              </div>
+
+              <div className="message-text">
+                {message.text}
+              </div>
+
+              {/* =================================
+                  Sources
+              ================================= */}
+
+              {message.sender === "AI" &&
+                message.sources?.length > 0 && (
+
+                  <div className="sources">
+
+                    <h4>Sources</h4>
+
+                    {message.sources.map(
+                      (source, i) =>
+                        renderSource(
+                          source,
+                          i
+                        )
+                    )}
+
+                  </div>
+                )}
+
+            </div>
           </div>
         ))}
 
+        {/* ======================================
+            Loading
+        ====================================== */}
+
         {loading && (
-          <div className="message">
-            <strong>AI:</strong>{" "}
-            Thinking...
+          <div className="message-row ai-row">
+
+            <div className="message ai-message">
+
+              <div className="message-sender">
+                🤖 AI
+              </div>
+
+              <div className="typing-indicator">
+                Thinking...
+              </div>
+
+            </div>
+
           </div>
         )}
+
       </div>
 
+      {/* ======================================
+          Input
+      ====================================== */}
+
       <div className="input-container">
+
         <input
           type="text"
           placeholder="Ask about your documents or memories..."
@@ -293,17 +342,22 @@ function Chat() {
             setQuestion(e.target.value)
           }
           onKeyDown={handleKeyDown}
+          disabled={loading}
         />
 
         <button
           onClick={sendMessage}
-          disabled={loading}
+          disabled={
+            loading || !question.trim()
+          }
         >
           {loading
             ? "Thinking..."
             : "Send"}
         </button>
+
       </div>
+
     </div>
   );
 }
