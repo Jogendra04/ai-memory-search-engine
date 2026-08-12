@@ -29,3 +29,8 @@ class ChatMessage(Base):
         Text,
         nullable=False
     )
+
+    sources = Column(
+        Text,
+        nullable=True
+    )

@@ -1,4 +1,3 @@
-
 from ollama import chat
 
 from app.services.chat_history import (
@@ -10,7 +9,8 @@ from app.services.chat_history import (
 def generate_answer(
     question,
     context,
-    user_id
+    user_id,
+    sources=None
 ):
 
     # ==========================================
@@ -57,14 +57,29 @@ Context:
     # Add this user's previous conversation
     # ==========================================
 
-    messages.extend(history)
+    for message in history:
 
-    print("\n========== PREVIOUS HISTORY ==========")
+        messages.append(
+            {
+                "role": message["role"],
+                "content": message["content"]
+            }
+        )
+
+    print(
+        "\n========== PREVIOUS HISTORY =========="
+    )
 
     for message in history:
 
-        print(f"{message['role']}: {message['content']}")
-    print("======================================\n")
+        print(
+            f"{message['role']}: "
+            f"{message['content']}"
+        )
+
+    print(
+        "======================================\n"
+    )
 
     # ==========================================
     # Add current question
@@ -103,19 +118,25 @@ Context:
         )
 
     # ==========================================
-    # Save conversation for THIS user only
+    # Save user's question
     # ==========================================
 
     add_message(
-        user_id,
-        "user",
-        question
+        user_id=user_id,
+        role="user",
+        content=question,
+        sources=[]
     )
 
+    # ==========================================
+    # Save AI answer + sources
+    # ==========================================
+
     add_message(
-        user_id,
-        "assistant",
-        answer
+        user_id=user_id,
+        role="assistant",
+        content=answer,
+        sources=sources or []
     )
 
     return answer

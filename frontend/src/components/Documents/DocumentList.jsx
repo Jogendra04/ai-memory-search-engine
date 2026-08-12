@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+
 import {
   getDocuments,
   deleteDocument,
@@ -8,17 +9,30 @@ function DocumentList({ refresh }) {
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(false);
 
+  // ==========================================
+  // Load Documents
+  // ==========================================
+
   const loadDocuments = async () => {
     try {
       const data = await getDocuments();
+
       setDocuments(data.documents || []);
     } catch (error) {
       console.error(error);
-      alert(error.message || "Failed to load documents.");
+
+      alert(
+        error.message ||
+          "Failed to load documents."
+      );
     } finally {
       setLoading(false);
     }
   };
+
+  // ==========================================
+  // Reload when upload succeeds
+  // ==========================================
 
   useEffect(() => {
     setLoading(true);
@@ -30,8 +44,16 @@ function DocumentList({ refresh }) {
     fetchDocuments();
   }, [refresh]);
 
+  // ==========================================
+  // Delete Document
+  // ==========================================
+
   const handleDelete = async (filename) => {
-    if (!window.confirm(`Delete "${filename}"?`)) {
+    if (
+      !window.confirm(
+        `Delete "${filename}"?`
+      )
+    ) {
       return;
     }
 
@@ -42,15 +64,27 @@ function DocumentList({ refresh }) {
 
       await loadDocuments();
 
-      alert("Document deleted successfully.");
+      alert(
+        "Document deleted successfully."
+      );
     } catch (error) {
       console.error(error);
-      alert(error.message || "Failed to delete document.");
+
+      setLoading(false);
+
+      alert(
+        error.message ||
+          "Failed to delete document."
+      );
     }
   };
 
+  // ==========================================
+  // UI
+  // ==========================================
+
   return (
-    <div className="document-list">
+    <div>
       <h2>Uploaded Documents</h2>
 
       {loading ? (
@@ -65,18 +99,30 @@ function DocumentList({ refresh }) {
           >
             <div className="memory-header">
               <div>
-                <h3>{document.filename}</h3>
+                <h3>
+                  {document.filename}
+                </h3>
+
                 <p>
                   {document.chunks}{" "}
-                  {document.chunks === 1 ? "chunk" : "chunks"}
+                  {document.chunks === 1
+                    ? "chunk"
+                    : "chunks"}
                 </p>
               </div>
 
               <button
                 className="delete-button"
-                onClick={() => handleDelete(document.filename)}
+                onClick={() =>
+                  handleDelete(
+                    document.filename
+                  )
+                }
+                disabled={loading}
               >
-                Delete
+                {loading
+                  ? "Deleting..."
+                  : "Delete"}
               </button>
             </div>
           </div>

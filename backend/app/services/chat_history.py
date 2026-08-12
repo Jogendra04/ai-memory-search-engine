@@ -1,3 +1,5 @@
+import json
+
 from app.database.database import SessionLocal
 from app.models.chat_message import ChatMessage
 
@@ -6,7 +8,12 @@ from app.models.chat_message import ChatMessage
 # Save Chat Message
 # ==========================================
 
-def add_message(user_id, role, content):
+def add_message(
+    user_id,
+    role,
+    content,
+    sources=None
+):
 
     db = SessionLocal()
 
@@ -15,7 +22,10 @@ def add_message(user_id, role, content):
         message = ChatMessage(
             user_id=user_id,
             role=role,
-            content=content
+            content=content,
+            sources=json.dumps(
+                sources or []
+            )
         )
 
         db.add(message)
@@ -23,10 +33,13 @@ def add_message(user_id, role, content):
         db.commit()
 
         print(
-            f"Saved chat message: user_id={user_id}, role={role}"
+            f"Saved chat message: "
+            f"user_id={user_id}, "
+            f"role={role}"
         )
 
     finally:
+
         db.close()
 
 
@@ -34,7 +47,10 @@ def add_message(user_id, role, content):
 # Get Chat History
 # ==========================================
 
-def get_history(user_id, limit=10):
+def get_history(
+    user_id,
+    limit=50
+):
 
     db = SessionLocal()
 
@@ -55,19 +71,41 @@ def get_history(user_id, limit=10):
         messages.reverse()
 
         print(
-            f"Loaded chat history: user_id={user_id}, "
+            f"Loaded chat history: "
+            f"user_id={user_id}, "
             f"messages={len(messages)}"
         )
 
-        return [
-            {
-                "role": message.role,
-                "content": message.content
-            }
-            for message in messages
-        ]
+        history = []
+
+        for message in messages:
+
+            try:
+
+                sources = (
+                    json.loads(
+                        message.sources
+                    )
+                    if message.sources
+                    else []
+                )
+
+            except json.JSONDecodeError:
+
+                sources = []
+
+            history.append(
+                {
+                    "role": message.role,
+                    "content": message.content,
+                    "sources": sources
+                }
+            )
+
+        return history
 
     finally:
+
         db.close()
 
 
@@ -90,6 +128,11 @@ def clear_history(user_id):
         ).delete()
 
         db.commit()
+
+        print(
+            f"Cleared chat history: "
+            f"user_id={user_id}"
+        )
 
     finally:
 
