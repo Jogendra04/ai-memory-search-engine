@@ -1,10 +1,9 @@
-
 import os
 import uuid
 
 from dotenv import load_dotenv
 
-from qdrant_client import QdrantClient  # type: ignore[import]
+from qdrant_client import QdrantClient
 from qdrant_client.models import (
     Distance,
     VectorParams,
@@ -105,6 +104,48 @@ def create_collection():
 
 
 # ==========================
+# Scroll All Points
+# ==========================
+
+def scroll_all_points():
+
+    all_points = []
+
+    offset = None
+
+    try:
+
+        while True:
+
+            results, next_offset = client.scroll(
+                collection_name=COLLECTION_NAME,
+                limit=100,
+                offset=offset,
+                with_payload=True,
+                with_vectors=False
+            )
+
+            all_points.extend(results)
+
+            if next_offset is None:
+                break
+
+            offset = next_offset
+
+        return all_points
+
+    except Exception as error:
+
+        print(
+            f"Qdrant pagination error: {error}"
+        )
+
+        raise QdrantServiceError(
+            "Unable to retrieve data from the search database."
+        ) from error
+
+
+# ==========================
 # Store Document Embedding
 # ==========================
 
@@ -199,6 +240,7 @@ def store_memory(
             "Unable to save the memory in the search database."
         ) from error
 
+
 # ==========================
 # Update Memory
 # ==========================
@@ -216,6 +258,7 @@ def update_memory(
         tags = []
 
     # Get the existing memory
+
     results = client.retrieve(
         collection_name=COLLECTION_NAME,
         ids=[memory_id],
@@ -224,16 +267,19 @@ def update_memory(
     )
 
     # Memory does not exist
+
     if not results:
         return False
 
     existing_payload = results[0].payload or {}
 
     # Make sure the memory belongs to this user
+
     if existing_payload.get("user_id") != user_id:
         return False
 
     # Update the existing Qdrant point
+
     client.upsert(
         collection_name=COLLECTION_NAME,
         points=[
@@ -256,6 +302,7 @@ def update_memory(
     )
 
     return True
+
 
 # ==========================
 # Search Embeddings
@@ -306,14 +353,7 @@ def get_all_memories(user_id):
 
     try:
 
-        results = client.scroll(
-            collection_name=COLLECTION_NAME,
-            limit=100,
-            with_payload=True,
-            with_vectors=False
-        )
-
-        points = results[0]
+        points = scroll_all_points()
 
         user_memories = []
 
@@ -398,14 +438,7 @@ def get_documents(user_id):
 
     try:
 
-        results = client.scroll(
-            collection_name=COLLECTION_NAME,
-            limit=1000,
-            with_payload=True,
-            with_vectors=False
-        )
-
-        points = results[0]
+        points = scroll_all_points()
 
         documents = {}
 
@@ -458,14 +491,7 @@ def delete_document(
 
     try:
 
-        results = client.scroll(
-            collection_name=COLLECTION_NAME,
-            limit=1000,
-            with_payload=True,
-            with_vectors=False
-        )
-
-        points = results[0]
+        points = scroll_all_points()
 
         ids_to_delete = []
 
@@ -477,6 +503,7 @@ def delete_document(
                 payload.get("filename") == filename
                 and payload.get("user_id") == user_id
             ):
+
                 ids_to_delete.append(point.id)
 
         if ids_to_delete:
@@ -515,14 +542,7 @@ def document_exists(
 
     try:
 
-        results = client.scroll(
-            collection_name=COLLECTION_NAME,
-            limit=1000,
-            with_payload=True,
-            with_vectors=False
-        )
-
-        points = results[0]
+        points = scroll_all_points()
 
         for point in points:
 
@@ -532,6 +552,7 @@ def document_exists(
                 payload.get("file_hash") == file_hash
                 and payload.get("user_id") == user_id
             ):
+
                 return True
 
         return False
