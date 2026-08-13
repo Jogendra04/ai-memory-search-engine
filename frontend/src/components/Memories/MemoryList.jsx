@@ -6,61 +6,76 @@ import {
   updateMemory,
 } from "../../services/api";
 
-
 function MemoryList({ refresh }) {
-
   const [memories, setMemories] = useState([]);
 
   const [loading, setLoading] = useState(false);
 
-  const [editingId, setEditingId] = useState(null);
+  const [editingId, setEditingId] =
+    useState(null);
 
-  const [editTitle, setEditTitle] = useState("");
-  const [editContent, setEditContent] = useState("");
-  const [editTags, setEditTags] = useState("");
+  const [editTitle, setEditTitle] =
+    useState("");
 
+  const [editContent, setEditContent] =
+    useState("");
+
+  const [editTags, setEditTags] =
+    useState("");
+
+  const [error, setError] =
+    useState("");
+
+  const [savingId, setSavingId] =
+    useState(null);
+
+  const [deletingId, setDeletingId] =
+    useState(null);
+
+  // ==========================================
+  // Load Memories
+  // ==========================================
 
   const loadMemories = async () => {
-
     try {
-
       setLoading(true);
+      setError("");
 
-      const data = await getMemories();
+      const data =
+        await getMemories();
 
       setMemories(
         data.memories || []
       );
-
     } catch (error) {
-
-      console.error(error);
-
-      alert(
-        error.message ||
-        "Failed to load memories."
+      console.error(
+        "Failed to load memories:",
+        error
       );
 
+      setError(
+        error.message ||
+          "Failed to load memories."
+      );
     } finally {
-
       setLoading(false);
-
     }
   };
 
+  // ==========================================
+  // Load on Mount / Refresh
+  // ==========================================
 
   useEffect(() => {
-
     loadMemories();
-
   }, [refresh]);
 
-
   // ==========================================
-  // Start editing
+  // Start Editing
   // ==========================================
 
   const handleEdit = (memory) => {
+    setError("");
 
     setEditingId(memory.id);
 
@@ -77,13 +92,11 @@ function MemoryList({ refresh }) {
     );
   };
 
-
   // ==========================================
-  // Cancel editing
+  // Cancel Editing
   // ==========================================
 
   const handleCancelEdit = () => {
-
     setEditingId(null);
 
     setEditTitle("");
@@ -91,304 +104,404 @@ function MemoryList({ refresh }) {
     setEditTags("");
   };
 
-
   // ==========================================
-  // Save edited memory
+  // Save Updated Memory
   // ==========================================
 
   const handleUpdate = async () => {
+    setError("");
 
     if (!editTitle.trim()) {
-
-      alert("Enter a title.");
-
+      setError(
+        "Please enter a memory title."
+      );
       return;
     }
 
     if (!editContent.trim()) {
-
-      alert("Enter memory content.");
-
+      setError(
+        "Please enter memory content."
+      );
       return;
     }
-
 
     const tagList = editTags
       .split(",")
       .map((tag) => tag.trim())
-      .filter(
-        (tag) => tag.length > 0
-      );
-
+      .filter((tag) => tag.length > 0);
 
     try {
-
-      setLoading(true);
+      setSavingId(editingId);
 
       await updateMemory(
         editingId,
         {
-          title: editTitle,
-          content: editContent,
+          title: editTitle.trim(),
+          content: editContent.trim(),
           tags: tagList,
         }
       );
 
-
-      setEditingId(null);
-
-      setEditTitle("");
-      setEditContent("");
-      setEditTags("");
-
-
-      await loadMemories();
-
-
-      alert(
-        "Memory updated successfully."
+      setMemories((previous) =>
+        previous.map((memory) =>
+          memory.id === editingId
+            ? {
+                ...memory,
+                title: editTitle.trim(),
+                content:
+                  editContent.trim(),
+                tags: tagList,
+              }
+            : memory
+        )
       );
 
+      handleCancelEdit();
     } catch (error) {
-
-      console.error(error);
-
-      alert(
-        error.message ||
-        "Failed to update memory."
+      console.error(
+        "Failed to update memory:",
+        error
       );
 
+      setError(
+        error.message ||
+          "Failed to update memory."
+      );
     } finally {
-
-      setLoading(false);
-
+      setSavingId(null);
     }
   };
 
-
   // ==========================================
-  // Delete memory
+  // Delete Memory
   // ==========================================
 
   const handleDelete = async (id) => {
-
     const confirmed =
       window.confirm(
-        "Delete this memory?"
+        "Are you sure you want to delete this memory?"
       );
-
 
     if (!confirmed) {
       return;
     }
 
-
     try {
-
-      setLoading(true);
+      setDeletingId(id);
+      setError("");
 
       await deleteMemory(id);
 
-      await loadMemories();
-
-      alert(
-        "Memory deleted successfully."
+      setMemories((previous) =>
+        previous.filter(
+          (memory) =>
+            memory.id !== id
+        )
       );
 
     } catch (error) {
-
-      console.error(error);
-
-      alert(
-        error.message ||
-        "Failed to delete memory."
+      console.error(
+        "Failed to delete memory:",
+        error
       );
 
+      setError(
+        error.message ||
+          "Failed to delete memory."
+      );
     } finally {
-
-      setLoading(false);
-
+      setDeletingId(null);
     }
   };
 
+  // ==========================================
+  // Loading
+  // ==========================================
+
+  if (loading) {
+    return (
+      <div className="memory-list">
+
+        <div className="list-header">
+          <div>
+            <h2>Saved Memories</h2>
+          </div>
+        </div>
+
+        <div className="memory-loading">
+          <span className="loading-spinner"></span>
+
+          <span>
+            Loading memories...
+          </span>
+        </div>
+
+      </div>
+    );
+  }
+
+  // ==========================================
+  // UI
+  // ==========================================
 
   return (
+    <div className="memory-list">
 
-    <div>
+      {/* ======================================
+          Header
+      ====================================== */}
 
-      <h2>Saved Memories</h2>
+      <div className="list-header">
 
+        <div>
+          <h2>
+            Saved Memories
+          </h2>
 
-      {loading && (
-        <p>Loading memories...</p>
+          <p>
+            {memories.length}{" "}
+            {memories.length === 1
+              ? "memory"
+              : "memories"}
+          </p>
+        </div>
+
+      </div>
+
+      {/* ======================================
+          Error
+      ====================================== */}
+
+      {error && (
+        <div className="form-error">
+          {error}
+        </div>
       )}
 
+      {/* ======================================
+          Empty State
+      ====================================== */}
 
-      {!loading &&
-        memories.length === 0 && (
+      {memories.length === 0 && (
+        <div className="memory-empty">
+
+          <div className="empty-icon">
+            🧠
+          </div>
+
+          <h3>
+            No memories yet
+          </h3>
+
           <p>
-            No memories saved yet.
+            Save important information above
+            so your AI can remember it.
           </p>
-        )}
 
+        </div>
+      )}
 
-      {!loading &&
-        memories.map((memory) => (
+      {/* ======================================
+          Memory Cards
+      ====================================== */}
 
-          <div
-            key={memory.id}
-            className="memory-card"
-          >
+      {memories.length > 0 && (
+        <div className="memory-items">
 
-            {editingId === memory.id ? (
+          {memories.map((memory) => {
 
-              // ==================================
-              // EDIT MODE
-              // ==================================
+            const isEditing =
+              editingId === memory.id;
 
-              <div>
+            const isSaving =
+              savingId === memory.id;
 
-                <h3>Edit Memory</h3>
+            const isDeleting =
+              deletingId === memory.id;
 
+            return (
+              <div
+                key={memory.id}
+                className="memory-card"
+              >
 
-                <input
-                  type="text"
-                  value={editTitle}
-                  onChange={(e) =>
-                    setEditTitle(
-                      e.target.value
-                    )
-                  }
-                  placeholder="Memory title"
-                />
+                {isEditing ? (
 
+                  /* ==========================
+                     EDIT MODE
+                  ========================== */
 
-                <textarea
-                  rows={5}
-                  value={editContent}
-                  onChange={(e) =>
-                    setEditContent(
-                      e.target.value
-                    )
-                  }
-                  placeholder="Memory content"
-                />
+                  <div className="memory-edit">
 
+                    <h3>
+                      Edit Memory
+                    </h3>
 
-                <input
-                  type="text"
-                  value={editTags}
-                  onChange={(e) =>
-                    setEditTags(
-                      e.target.value
-                    )
-                  }
-                  placeholder="Tags: ai, python, project"
-                />
+                    <label>
+                      Title
+                    </label>
 
+                    <input
+                      type="text"
+                      value={editTitle}
+                      onChange={(event) =>
+                        setEditTitle(
+                          event.target.value
+                        )
+                      }
+                      disabled={isSaving}
+                    />
 
-                <button
-                  onClick={handleUpdate}
-                  disabled={loading}
-                >
-                  {loading
-                    ? "Updating..."
-                    : "Update Memory"}
-                </button>
+                    <label>
+                      Content
+                    </label>
 
+                    <textarea
+                      rows={5}
+                      value={editContent}
+                      onChange={(event) =>
+                        setEditContent(
+                          event.target.value
+                        )
+                      }
+                      disabled={isSaving}
+                    />
 
-                <button
-                  onClick={
-                    handleCancelEdit
-                  }
-                  disabled={loading}
-                >
-                  Cancel
-                </button>
+                    <label>
+                      Tags
+                    </label>
 
-              </div>
+                    <input
+                      type="text"
+                      value={editTags}
+                      onChange={(event) =>
+                        setEditTags(
+                          event.target.value
+                        )
+                      }
+                      placeholder="ai, python, project"
+                      disabled={isSaving}
+                    />
 
-            ) : (
+                    <div className="edit-actions">
 
-              // ==================================
-              // VIEW MODE
-              // ==================================
+                      <button
+                        className="save-edit-button"
+                        onClick={
+                          handleUpdate
+                        }
+                        disabled={isSaving}
+                      >
+                        {isSaving
+                          ? "Saving..."
+                          : "Save Changes"}
+                      </button>
 
-              <div>
+                      <button
+                        className="cancel-edit-button"
+                        onClick={
+                          handleCancelEdit
+                        }
+                        disabled={isSaving}
+                      >
+                        Cancel
+                      </button>
 
-                <div className="memory-header">
+                    </div>
 
-                  <h3>
-                    {memory.title}
-                  </h3>
+                  </div>
 
+                ) : (
+
+                  /* ==========================
+                     VIEW MODE
+                  ========================== */
 
                   <div>
 
-                    <button
-                      onClick={() =>
-                        handleEdit(
-                          memory
-                        )
-                      }
-                    >
-                      Edit
-                    </button>
+                    <div className="memory-header">
 
+                      <div className="memory-title-area">
 
-                    <button
-                      className="delete-button"
-                      onClick={() =>
-                        handleDelete(
-                          memory.id
-                        )
-                      }
-                    >
-                      Delete
-                    </button>
+                        <h3>
+                          {memory.title}
+                        </h3>
 
-                  </div>
+                      </div>
 
-                </div>
+                      <div className="memory-actions">
 
-
-                <p>
-                  {memory.content}
-                </p>
-
-
-                {memory.tags?.length > 0 && (
-
-                  <div className="tags">
-
-                    {memory.tags.map(
-                      (tag, index) => (
-
-                        <span
-                          key={index}
-                          className="tag"
+                        <button
+                          className="edit-button"
+                          onClick={() =>
+                            handleEdit(
+                              memory
+                            )
+                          }
+                          disabled={
+                            deletingId !== null
+                          }
                         >
-                          #{tag}
-                        </span>
+                          Edit
+                        </button>
 
-                      )
+                        <button
+                          className="delete-button"
+                          onClick={() =>
+                            handleDelete(
+                              memory.id
+                            )
+                          }
+                          disabled={
+                            deletingId !== null
+                          }
+                        >
+                          {isDeleting
+                            ? "Deleting..."
+                            : "Delete"}
+                        </button>
+
+                      </div>
+
+                    </div>
+
+                    <p className="memory-content">
+                      {memory.content}
+                    </p>
+
+                    {memory.tags?.length >
+                      0 && (
+                      <div className="tags">
+
+                        {memory.tags.map(
+                          (
+                            tag,
+                            index
+                          ) => (
+                            <span
+                              key={index}
+                              className="tag"
+                            >
+                              #{tag}
+                            </span>
+                          )
+                        )}
+
+                      </div>
                     )}
 
                   </div>
-
                 )}
 
               </div>
+            );
+          })}
 
-            )}
-
-          </div>
-
-        ))}
+        </div>
+      )}
 
     </div>
   );
 }
-
 
 export default MemoryList;

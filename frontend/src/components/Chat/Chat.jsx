@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import {
   search,
@@ -8,24 +8,32 @@ import {
 
 
 function Chat() {
+
   const [messages, setMessages] = useState([]);
+
   const [question, setQuestion] = useState("");
+
   const [loading, setLoading] = useState(false);
+
+  const chatContainerRef = useRef(null);
 
 
   // ==========================================
-  // Welcome message
+  // Welcome Message
   // ==========================================
 
   const getWelcomeMessage = () => ({
     sender: "AI",
-    text: "Welcome! Ask me anything about your documents or memories.",
+
+    text:
+      "Welcome! I can search through your uploaded documents and saved memories. Ask me a question to get started.",
+
     sources: [],
   });
 
 
   // ==========================================
-  // Load chat history
+  // Load Chat History
   // ==========================================
 
   useEffect(() => {
@@ -41,6 +49,7 @@ function Chat() {
 
         const formattedMessages = history.map(
           (message) => ({
+
             sender:
               message.role === "user"
                 ? "You"
@@ -48,9 +57,9 @@ function Chat() {
 
             text: message.content,
 
-            // Restore sources saved in SQLite
             sources:
               message.sources || [],
+
           })
         );
 
@@ -76,7 +85,6 @@ function Chat() {
           error
         );
 
-
         setMessages([
           getWelcomeMessage()
         ]);
@@ -92,7 +100,30 @@ function Chat() {
 
 
   // ==========================================
-  // Clear chat history
+  // Auto Scroll
+  // ==========================================
+
+  useEffect(() => {
+
+    if (!chatContainerRef.current) {
+      return;
+    }
+
+
+    chatContainerRef.current.scrollTo({
+
+      top:
+        chatContainerRef.current.scrollHeight,
+
+      behavior: "smooth",
+
+    });
+
+  }, [messages, loading]);
+
+
+  // ==========================================
+  // Clear Chat History
   // ==========================================
 
   const handleClearChat = async () => {
@@ -142,7 +173,7 @@ function Chat() {
 
 
   // ==========================================
-  // Send message
+  // Send Message
   // ==========================================
 
   const sendMessage = async () => {
@@ -151,7 +182,9 @@ function Chat() {
       !question.trim() ||
       loading
     ) {
+
       return;
+
     }
 
 
@@ -159,14 +192,17 @@ function Chat() {
       question.trim();
 
 
-    // Add user's question immediately
-    setMessages((prev) => [
+    // Add user message immediately
 
-      ...prev,
+    setMessages((previousMessages) => [
+
+      ...previousMessages,
 
       {
         sender: "You",
+
         text: currentQuestion,
+
         sources: [],
       },
 
@@ -174,6 +210,7 @@ function Chat() {
 
 
     setQuestion("");
+
     setLoading(true);
 
 
@@ -185,10 +222,9 @@ function Chat() {
         );
 
 
-      // Add AI response
-      setMessages((prev) => [
+      setMessages((previousMessages) => [
 
-        ...prev,
+        ...previousMessages,
 
         {
           sender: "AI",
@@ -199,6 +235,7 @@ function Chat() {
 
           sources:
             data.sources || [],
+
         },
 
       ]);
@@ -211,17 +248,18 @@ function Chat() {
       );
 
 
-      setMessages((prev) => [
+      setMessages((previousMessages) => [
 
-        ...prev,
+        ...previousMessages,
 
         {
           sender: "AI",
 
           text:
-            "Unable to connect to the backend.",
+            "I couldn't connect to the backend. Please make sure the FastAPI server is running and try again.",
 
           sources: [],
+
         },
 
       ]);
@@ -236,17 +274,17 @@ function Chat() {
 
 
   // ==========================================
-  // Enter key
+  // Enter Key
   // ==========================================
 
-  const handleKeyDown = (e) => {
+  const handleKeyDown = (event) => {
 
     if (
-      e.key === "Enter" &&
-      !e.shiftKey
+      event.key === "Enter" &&
+      !event.shiftKey
     ) {
 
-      e.preventDefault();
+      event.preventDefault();
 
       sendMessage();
 
@@ -256,7 +294,7 @@ function Chat() {
 
 
   // ==========================================
-  // Render source
+  // Render Source
   // ==========================================
 
   const renderSource = (
@@ -273,7 +311,7 @@ function Chat() {
 
 
     // ----------------------------------------
-    // Saved Memory
+    // Memory Source
     // ----------------------------------------
 
     if (
@@ -302,10 +340,10 @@ function Chat() {
             <div className="source-tags">
 
               {source.tags.map(
-                (tag, i) => (
+                (tag, tagIndex) => (
 
                   <span
-                    key={i}
+                    key={tagIndex}
                     className="source-tag"
                   >
                     #{tag}
@@ -331,7 +369,7 @@ function Chat() {
 
 
     // ----------------------------------------
-    // Uploaded Document
+    // Document Source
     // ----------------------------------------
 
     return (
@@ -377,7 +415,7 @@ function Chat() {
 
 
       {/* ======================================
-          Header
+          CHAT HEADER
       ====================================== */}
 
       <div className="chat-header">
@@ -387,7 +425,6 @@ function Chat() {
           <h2>
             Ask Your AI
           </h2>
-
 
           <p>
             Search your documents and memories
@@ -399,7 +436,10 @@ function Chat() {
         <button
           className="clear-chat-button"
           onClick={handleClearChat}
-          disabled={loading}
+          disabled={
+            loading ||
+            messages.length === 0
+          }
         >
           Clear Chat
         </button>
@@ -408,10 +448,71 @@ function Chat() {
 
 
       {/* ======================================
-          Chat Messages
+          CHAT AREA
       ====================================== */}
 
-      <div className="chat-container">
+      <div
+        className="chat-container"
+        ref={chatContainerRef}
+      >
+
+        {/* ====================================
+            EMPTY / WELCOME STATE
+        ==================================== */}
+
+        {messages.length === 1 &&
+          messages[0].sender === "AI" && (
+
+            <div className="chat-empty-state">
+
+              <div className="chat-empty-icon">
+                🧠
+              </div>
+
+              <h3>
+                Ask your AI anything
+              </h3>
+
+              <p>
+                Your AI can search through
+                your documents and saved
+                memories to answer questions.
+              </p>
+
+              <div className="suggestion-list">
+
+                <button
+                  onClick={() =>
+                    setQuestion(
+                      "What information is available in my documents?"
+                    )
+                  }
+                  disabled={loading}
+                >
+                  📄 Search my documents
+                </button>
+
+                <button
+                  onClick={() =>
+                    setQuestion(
+                      "What do you remember about me?"
+                    )
+                  }
+                  disabled={loading}
+                >
+                  🧠 Search my memories
+                </button>
+
+              </div>
+
+            </div>
+
+          )}
+
+
+        {/* ====================================
+            MESSAGES
+        ==================================== */}
 
         {messages.map(
           (message, index) => (
@@ -433,6 +534,8 @@ function Chat() {
                 }`}
               >
 
+                {/* Sender */}
+
                 <div className="message-sender">
 
                   {message.sender === "You"
@@ -442,6 +545,8 @@ function Chat() {
                 </div>
 
 
+                {/* Message */}
+
                 <div className="message-text">
 
                   {message.text}
@@ -449,9 +554,7 @@ function Chat() {
                 </div>
 
 
-                {/* =================================
-                    Sources
-                ================================= */}
+                {/* Sources */}
 
                 {message.sender === "AI" &&
                   message.sources?.length > 0 && (
@@ -459,15 +562,18 @@ function Chat() {
                     <div className="sources">
 
                       <h4>
-                        Sources
+                        Sources used
                       </h4>
 
 
                       {message.sources.map(
-                        (source, i) =>
+                        (
+                          source,
+                          sourceIndex
+                        ) =>
                           renderSource(
                             source,
-                            i
+                            sourceIndex
                           )
                       )}
 
@@ -483,9 +589,9 @@ function Chat() {
         )}
 
 
-        {/* ======================================
-            Loading
-        ====================================== */}
+        {/* ====================================
+            THINKING INDICATOR
+        ==================================== */}
 
         {loading && (
 
@@ -498,8 +604,20 @@ function Chat() {
               </div>
 
 
-              <div className="typing-indicator">
-                Thinking...
+              <div className="thinking">
+
+                <span>
+                  Thinking
+                </span>
+
+                <span className="thinking-dots">
+
+                  <span>.</span>
+                  <span>.</span>
+                  <span>.</span>
+
+                </span>
+
               </div>
 
             </div>
@@ -512,18 +630,22 @@ function Chat() {
 
 
       {/* ======================================
-          Input
+          INPUT
       ====================================== */}
 
       <div className="input-container">
 
         <input
           type="text"
-          placeholder="Ask about your documents or memories..."
+          placeholder={
+            loading
+              ? "AI is thinking..."
+              : "Ask about your documents or memories..."
+          }
           value={question}
-          onChange={(e) =>
+          onChange={(event) =>
             setQuestion(
-              e.target.value
+              event.target.value
             )
           }
           onKeyDown={handleKeyDown}
@@ -547,6 +669,17 @@ function Chat() {
 
       </div>
 
+
+      {/* ======================================
+          FOOTER HINT
+      ====================================== */}
+
+      <div className="chat-input-hint">
+
+        Press Enter to send · Shift + Enter
+        for a new line
+
+      </div>
 
     </div>
 

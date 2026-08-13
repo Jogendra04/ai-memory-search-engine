@@ -6,15 +6,22 @@ function MemoryForm({ onMemorySaved }) {
   const [content, setContent] = useState("");
   const [tags, setTags] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
-  const handleSave = async () => {
+  const handleSave = async (event) => {
+    event.preventDefault();
+
+    setError("");
+    setSuccess("");
+
     if (!title.trim()) {
-      alert("Enter a title");
+      setError("Please enter a memory title.");
       return;
     }
 
     if (!content.trim()) {
-      alert("Enter memory content");
+      setError("Please enter memory content.");
       return;
     }
 
@@ -23,9 +30,9 @@ function MemoryForm({ onMemorySaved }) {
       .map((tag) => tag.trim())
       .filter((tag) => tag.length > 0);
 
-    setLoading(true);
-
     try {
+      setLoading(true);
+
       await saveMemory({
         title: title.trim(),
         content: content.trim(),
@@ -36,15 +43,18 @@ function MemoryForm({ onMemorySaved }) {
       setContent("");
       setTags("");
 
+      setSuccess("Memory saved successfully.");
+
       if (onMemorySaved) {
         onMemorySaved();
       }
-
-      alert("Memory saved!");
     } catch (error) {
-      console.error(error);
+      console.error(
+        "Failed to save memory:",
+        error
+      );
 
-      alert(
+      setError(
         error.message ||
           "Failed to save memory."
       );
@@ -54,44 +64,92 @@ function MemoryForm({ onMemorySaved }) {
   };
 
   return (
-    <div>
-      <h2>Add Memory</h2>
+    <div className="memory-form">
 
-      <input
-        type="text"
-        placeholder="Memory title"
-        value={title}
-        onChange={(e) =>
-          setTitle(e.target.value)
-        }
-      />
+      <div className="section-heading">
+        <div>
+          <h2>Add Memory</h2>
 
-      <textarea
-        rows={5}
-        placeholder="Write your memory..."
-        value={content}
-        onChange={(e) =>
-          setContent(e.target.value)
-        }
-      />
+          <p>
+            Save information you want your AI to remember.
+          </p>
+        </div>
+      </div>
 
-      <input
-        type="text"
-        placeholder="Tags: ai, python, project"
-        value={tags}
-        onChange={(e) =>
-          setTags(e.target.value)
-        }
-      />
+      <form onSubmit={handleSave}>
 
-      <button
-        onClick={handleSave}
-        disabled={loading}
-      >
-        {loading
-          ? "Saving..."
-          : "Save Memory"}
-      </button>
+        <label htmlFor="memory-title">
+          Title
+        </label>
+
+        <input
+          id="memory-title"
+          type="text"
+          placeholder="e.g. My AI project"
+          value={title}
+          onChange={(event) =>
+            setTitle(event.target.value)
+          }
+          disabled={loading}
+        />
+
+        <label htmlFor="memory-content">
+          Content
+        </label>
+
+        <textarea
+          id="memory-content"
+          rows={5}
+          placeholder="Write something you want your AI to remember..."
+          value={content}
+          onChange={(event) =>
+            setContent(event.target.value)
+          }
+          disabled={loading}
+        />
+
+        <label htmlFor="memory-tags">
+          Tags
+        </label>
+
+        <input
+          id="memory-tags"
+          type="text"
+          placeholder="ai, python, project"
+          value={tags}
+          onChange={(event) =>
+            setTags(event.target.value)
+          }
+          disabled={loading}
+        />
+
+        <p className="field-hint">
+          Separate multiple tags with commas.
+        </p>
+
+        <button
+          type="submit"
+          disabled={loading}
+        >
+          {loading
+            ? "Saving..."
+            : "Save Memory"}
+        </button>
+
+      </form>
+
+      {error && (
+        <div className="form-error">
+          {error}
+        </div>
+      )}
+
+      {success && (
+        <div className="form-success">
+          {success}
+        </div>
+      )}
+
     </div>
   );
 }
