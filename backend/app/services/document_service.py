@@ -1,4 +1,3 @@
-
 import os
 import shutil
 import hashlib
@@ -45,6 +44,7 @@ def process_document(
         filename
     )[1].lower()
 
+
     # ======================================
     # Validate File Type
     # ======================================
@@ -55,16 +55,21 @@ def process_document(
             f"Unsupported file type: {extension}"
         )
 
+
     # ======================================
-    # Create Upload Directory
+    # Create User Upload Directory
     # ======================================
 
-    upload_dir = "uploads"
+    upload_dir = os.path.join(
+        "uploads",
+        str(user_id)
+    )
 
     os.makedirs(
         upload_dir,
         exist_ok=True
     )
+
 
     # ======================================
     # Save Uploaded File
@@ -85,6 +90,7 @@ def process_document(
             buffer
         )
 
+
     # ======================================
     # Generate SHA-256 Hash
     # ======================================
@@ -97,6 +103,7 @@ def process_document(
         file_hash = hashlib.sha256(
             uploaded_file.read()
         ).hexdigest()
+
 
     # ======================================
     # Check Duplicate Document
@@ -118,6 +125,7 @@ def process_document(
             "duplicate": True
         }
 
+
     # ======================================
     # Extract Text
     # ======================================
@@ -138,6 +146,7 @@ def process_document(
             f"Unable to extract text: {error}"
         ) from error
 
+
     # ======================================
     # Validate Extracted Text
     # ======================================
@@ -152,11 +161,13 @@ def process_document(
             "in the uploaded file."
         )
 
+
     # ======================================
     # Split Into Chunks
     # ======================================
 
     chunks = chunk_text(text)
+
 
     # ======================================
     # Create Embeddings
@@ -176,6 +187,7 @@ def process_document(
             file_hash=file_hash,
             user_id=user_id
         )
+
 
     # ======================================
     # Return Result
