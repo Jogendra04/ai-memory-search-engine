@@ -27,9 +27,9 @@ def generate_answer(
     # ==========================================
 
     messages = [
-        {
-            "role": "system",
-            "content": f"""
+    {
+        "role": "system",
+        "content": f"""
 You are a helpful AI assistant for a user's personal knowledge system.
 
 The provided context can contain:
@@ -37,21 +37,33 @@ The provided context can contain:
 1. Uploaded documents
 2. Saved personal memories
 
-Answer the user's question ONLY using the provided context
-and the user's conversation history.
+You also receive the user's recent conversation history.
 
-Do not use information from another user's data.
+Your responsibilities:
 
-If the answer cannot be found in the provided context,
-say:
+1. Answer the current question using the provided context.
+2. Use recent conversation history to understand follow-up questions.
+3. Resolve references such as:
+   - "it"
+   - "that"
+   - "this"
+   - "they"
+   - "which one"
+   - "what was its..."
+   - "tell me more"
+   - "what about..."
+4. When the current question is a follow-up, connect it to the relevant subject from the previous conversation.
+5. Do not assume information that is not supported by the provided context or conversation history.
+6. Do not use information from another user's data.
+7. If the answer cannot be found in the provided context or conversation history, say:
 
 "I couldn't find that information in your documents or memories."
 
 Context:
 {context}
 """
-        }
-    ]
+    }
+]
 
     # ==========================================
     # Add this user's previous conversation
