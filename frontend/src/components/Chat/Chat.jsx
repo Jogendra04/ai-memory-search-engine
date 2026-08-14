@@ -6,17 +6,12 @@ import {
   clearChatHistory,
 } from "../../services/api";
 
-
 function Chat() {
-
   const [messages, setMessages] = useState([]);
-
   const [question, setQuestion] = useState("");
-
   const [loading, setLoading] = useState(false);
 
   const chatContainerRef = useRef(null);
-
 
   // ==========================================
   // Welcome Message
@@ -24,208 +19,129 @@ function Chat() {
 
   const getWelcomeMessage = () => ({
     sender: "AI",
-
     text:
       "Welcome! I can search through your uploaded documents and saved memories. Ask me a question to get started.",
-
     sources: [],
   });
-
 
   // ==========================================
   // Load Chat History
   // ==========================================
 
   useEffect(() => {
-
     const loadChatHistory = async () => {
-
       try {
-
         const data = await getChatHistory();
 
         const history = data.history || [];
 
+        const formattedMessages = history.map((message) => ({
+          sender:
+            message.role === "user"
+              ? "You"
+              : "AI",
 
-        const formattedMessages = history.map(
-          (message) => ({
+          text: message.content,
 
-            sender:
-              message.role === "user"
-                ? "You"
-                : "AI",
-
-            text: message.content,
-
-            sources:
-              message.sources || [],
-
-          })
-        );
-
+          sources: message.sources || [],
+        }));
 
         if (formattedMessages.length > 0) {
-
-          setMessages(
-            formattedMessages
-          );
-
+          setMessages(formattedMessages);
         } else {
-
-          setMessages([
-            getWelcomeMessage()
-          ]);
-
+          setMessages([getWelcomeMessage()]);
         }
-
       } catch (error) {
-
         console.error(
           "Failed to load chat history:",
           error
         );
 
-        setMessages([
-          getWelcomeMessage()
-        ]);
-
+        setMessages([getWelcomeMessage()]);
       }
-
     };
 
-
     loadChatHistory();
-
   }, []);
-
 
   // ==========================================
   // Auto Scroll
   // ==========================================
 
   useEffect(() => {
-
     if (!chatContainerRef.current) {
       return;
     }
 
-
     chatContainerRef.current.scrollTo({
-
-      top:
-        chatContainerRef.current.scrollHeight,
-
+      top: chatContainerRef.current.scrollHeight,
       behavior: "smooth",
-
     });
-
   }, [messages, loading]);
-
 
   // ==========================================
   // Clear Chat History
   // ==========================================
 
   const handleClearChat = async () => {
-
-    const confirmed =
-      window.confirm(
-        "Are you sure you want to clear your chat history?"
-      );
-
+    const confirmed = window.confirm(
+      "Are you sure you want to clear your chat history?"
+    );
 
     if (!confirmed) {
       return;
     }
 
-
     try {
-
       setLoading(true);
 
       await clearChatHistory();
 
-
-      setMessages([
-        getWelcomeMessage()
-      ]);
-
+      setMessages([getWelcomeMessage()]);
     } catch (error) {
-
       console.error(
         "Failed to clear chat history:",
         error
       );
 
-
       alert(
         error.message ||
-        "Failed to clear chat history."
+          "Failed to clear chat history."
       );
-
     } finally {
-
       setLoading(false);
-
     }
-
   };
-
 
   // ==========================================
   // Send Message
   // ==========================================
 
   const sendMessage = async () => {
-
-    if (
-      !question.trim() ||
-      loading
-    ) {
-
+    if (!question.trim() || loading) {
       return;
-
     }
 
-
-    const currentQuestion =
-      question.trim();
-
+    const currentQuestion = question.trim();
 
     // Add user message immediately
-
     setMessages((previousMessages) => [
-
       ...previousMessages,
-
       {
         sender: "You",
-
         text: currentQuestion,
-
         sources: [],
       },
-
     ]);
 
-
     setQuestion("");
-
     setLoading(true);
 
-
     try {
-
-      const data =
-        await search(
-          currentQuestion
-        );
-
+      const data = await search(currentQuestion);
 
       setMessages((previousMessages) => [
-
         ...previousMessages,
-
         {
           sender: "AI",
 
@@ -235,23 +151,16 @@ function Chat() {
 
           sources:
             data.sources || [],
-
         },
-
       ]);
-
     } catch (error) {
-
       console.error(
         "Search error:",
         error
       );
 
-
       setMessages((previousMessages) => [
-
         ...previousMessages,
-
         {
           sender: "AI",
 
@@ -259,49 +168,41 @@ function Chat() {
             "I couldn't connect to the backend. Please make sure the FastAPI server is running and try again.",
 
           sources: [],
-
         },
-
       ]);
-
     } finally {
-
       setLoading(false);
-
     }
-
   };
-
 
   // ==========================================
   // Enter Key
   // ==========================================
 
   const handleKeyDown = (event) => {
-
     if (
       event.key === "Enter" &&
       !event.shiftKey
     ) {
-
       event.preventDefault();
 
       sendMessage();
-
     }
-
   };
 
+  // ==========================================
+  // Suggestion
+  // ==========================================
+
+  const handleSuggestion = (text) => {
+    setQuestion(text);
+  };
 
   // ==========================================
   // Render Source
   // ==========================================
 
-  const renderSource = (
-    source,
-    index
-  ) => {
-
+  const renderSource = (source, index) => {
     const score =
       source.score !== undefined
         ? `${Math.round(
@@ -309,110 +210,88 @@ function Chat() {
           )}%`
         : "N/A";
 
-
     // ----------------------------------------
     // Memory Source
     // ----------------------------------------
 
-    if (
-      source.type === "memory"
-    ) {
-
+    if (source.type === "memory") {
       return (
-
         <div
           className="source-card memory-source"
           key={index}
         >
-
           <div className="source-type">
             🧠 Saved Memory
           </div>
-
 
           <div className="source-title">
             {source.title}
           </div>
 
-
           {source.tags?.length > 0 && (
-
             <div className="source-tags">
-
               {source.tags.map(
                 (tag, tagIndex) => (
-
                   <span
                     key={tagIndex}
                     className="source-tag"
                   >
                     #{tag}
                   </span>
-
                 )
               )}
-
             </div>
-
           )}
-
 
           <div className="source-score">
             Match: {score}
           </div>
-
         </div>
-
       );
-
     }
-
 
     // ----------------------------------------
     // Document Source
     // ----------------------------------------
 
     return (
-
       <div
         className="source-card document-source"
         key={index}
       >
-
         <div className="source-type">
           📄 Uploaded Document
         </div>
-
 
         <div className="source-title">
           {source.filename}
         </div>
 
-
         <div className="source-chunk">
           Chunk: {source.chunk_number}
         </div>
 
-
         <div className="source-score">
           Match: {score}
         </div>
-
       </div>
-
     );
-
   };
 
+  // ==========================================
+  // Check Empty State
+  // ==========================================
+
+  const isEmptyState =
+    messages.length === 1 &&
+    messages[0]?.sender === "AI";
 
   // ==========================================
   // UI
   // ==========================================
 
   return (
-
     <div className="chat-page">
-
 
       {/* ======================================
           CHAT HEADER
@@ -421,7 +300,6 @@ function Chat() {
       <div className="chat-header">
 
         <div>
-
           <h2>
             Ask Your AI
           </h2>
@@ -429,9 +307,7 @@ function Chat() {
           <p>
             Search your documents and memories
           </p>
-
         </div>
-
 
         <button
           className="clear-chat-button"
@@ -446,7 +322,6 @@ function Chat() {
 
       </div>
 
-
       {/* ======================================
           CHAT AREA
       ====================================== */}
@@ -460,141 +335,125 @@ function Chat() {
             EMPTY / WELCOME STATE
         ==================================== */}
 
-        {messages.length === 1 &&
-          messages[0].sender === "AI" && (
+        {isEmptyState && (
+          <div className="chat-empty-state">
 
-            <div className="chat-empty-state">
+            <div className="chat-empty-icon">
+              🧠
+            </div>
 
-              <div className="chat-empty-icon">
-                🧠
-              </div>
+            <h3>
+              Ask your AI anything
+            </h3>
 
-              <h3>
-                Ask your AI anything
-              </h3>
+            <p>
+              Your AI can search through
+              your documents and saved
+              memories to answer questions.
+            </p>
 
-              <p>
-                Your AI can search through
-                your documents and saved
-                memories to answer questions.
-              </p>
+            <div className="suggestion-list">
 
-              <div className="suggestion-list">
+              <button
+                onClick={() =>
+                  handleSuggestion(
+                    "What information is available in my documents?"
+                  )
+                }
+                disabled={loading}
+              >
+                📄 Search my documents
+              </button>
 
-                <button
-                  onClick={() =>
-                    setQuestion(
-                      "What information is available in my documents?"
-                    )
-                  }
-                  disabled={loading}
-                >
-                  📄 Search my documents
-                </button>
-
-                <button
-                  onClick={() =>
-                    setQuestion(
-                      "What do you remember about me?"
-                    )
-                  }
-                  disabled={loading}
-                >
-                  🧠 Search my memories
-                </button>
-
-              </div>
+              <button
+                onClick={() =>
+                  handleSuggestion(
+                    "What do you remember about me?"
+                  )
+                }
+                disabled={loading}
+              >
+                🧠 Search my memories
+              </button>
 
             </div>
 
-          )}
-
+          </div>
+        )}
 
         {/* ====================================
             MESSAGES
         ==================================== */}
 
-        {messages.map(
-          (message, index) => (
-
-            <div
-              key={index}
-              className={`message-row ${
-                message.sender === "You"
-                  ? "user-row"
-                  : "ai-row"
-              }`}
-            >
-
+        {!isEmptyState &&
+          messages.map(
+            (message, index) => (
               <div
-                className={`message ${
+                key={index}
+                className={`message-row ${
                   message.sender === "You"
-                    ? "user-message"
-                    : "ai-message"
+                    ? "user-row"
+                    : "ai-row"
                 }`}
               >
 
-                {/* Sender */}
+                <div
+                  className={`message ${
+                    message.sender === "You"
+                      ? "user-message"
+                      : "ai-message"
+                  }`}
+                >
 
-                <div className="message-sender">
+                  {/* Sender */}
 
-                  {message.sender === "You"
-                    ? "👤 You"
-                    : "🤖 AI"}
+                  <div className="message-sender">
+                    {message.sender === "You"
+                      ? "👤 You"
+                      : "🤖 AI"}
+                  </div>
 
-                </div>
+                  {/* Message */}
 
+                  <div className="message-text">
+                    {message.text}
+                  </div>
 
-                {/* Message */}
+                  {/* Sources */}
 
-                <div className="message-text">
+                  {message.sender === "AI" &&
+                    message.sources?.length > 0 && (
+                      <div className="sources">
 
-                  {message.text}
+                        <h4>
+                          Sources used
+                        </h4>
 
-                </div>
-
-
-                {/* Sources */}
-
-                {message.sender === "AI" &&
-                  message.sources?.length > 0 && (
-
-                    <div className="sources">
-
-                      <h4>
-                        Sources used
-                      </h4>
-
-
-                      {message.sources.map(
-                        (
-                          source,
-                          sourceIndex
-                        ) =>
-                          renderSource(
+                        {message.sources.map(
+                          (
                             source,
                             sourceIndex
-                          )
-                      )}
+                          ) =>
+                            renderSource(
+                              source,
+                              sourceIndex
+                            )
+                        )}
 
-                    </div>
+                      </div>
+                    )}
 
-                  )}
+                </div>
 
               </div>
-
-            </div>
-
-          )
-        )}
-
+            )
+          )}
 
         {/* ====================================
             THINKING INDICATOR
         ==================================== */}
 
         {loading && (
-
           <div className="message-row ai-row">
 
             <div className="message ai-message">
@@ -602,7 +461,6 @@ function Chat() {
               <div className="message-sender">
                 🤖 AI
               </div>
-
 
               <div className="thinking">
 
@@ -623,11 +481,9 @@ function Chat() {
             </div>
 
           </div>
-
         )}
 
       </div>
-
 
       {/* ======================================
           INPUT
@@ -652,7 +508,6 @@ function Chat() {
           disabled={loading}
         />
 
-
         <button
           onClick={sendMessage}
           disabled={
@@ -660,32 +515,24 @@ function Chat() {
             !question.trim()
           }
         >
-
           {loading
             ? "Thinking..."
             : "Send"}
-
         </button>
 
       </div>
-
 
       {/* ======================================
           FOOTER HINT
       ====================================== */}
 
       <div className="chat-input-hint">
-
         Press Enter to send · Shift + Enter
         for a new line
-
       </div>
 
     </div>
-
   );
-
 }
-
 
 export default Chat;

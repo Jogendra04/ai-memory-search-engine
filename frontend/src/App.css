@@ -1,3 +1,4 @@
+
 /* =========================================================
    GLOBAL
 ========================================================= */
@@ -9,10 +10,11 @@
 :root {
   font-family:
     Inter,
-    system-ui,
     -apple-system,
     BlinkMacSystemFont,
     "Segoe UI",
+    Roboto,
+    Arial,
     sans-serif;
 
   color: #111827;
@@ -24,20 +26,16 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-html {
+html,
+body,
+#root {
   margin: 0;
-  padding: 0;
-  min-height: 100%;
+  min-width: 320px;
+  min-height: 100vh;
 }
 
 body {
-  margin: 0;
-  padding: 0;
-  min-width: 320px;
-  min-height: 100vh;
-
   background: #f8fafc;
-  color: #111827;
 }
 
 button,
@@ -47,17 +45,11 @@ textarea {
 }
 
 button {
-  outline: none;
+  cursor: pointer;
 }
 
-input,
-textarea {
-  outline: none;
-}
-
-#root {
-  width: 100%;
-  min-height: 100vh;
+button:disabled {
+  cursor: not-allowed;
 }
 
 
@@ -71,8 +63,6 @@ textarea {
   display: flex;
 
   background: #f8fafc;
-
-  color: #111827;
 }
 
 
@@ -84,19 +74,21 @@ textarea {
   width: 250px;
   min-height: 100vh;
 
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+
   display: flex;
   flex-direction: column;
+
+  padding: 24px 16px;
 
   background: #ffffff;
 
   border-right: 1px solid #e5e7eb;
 
-  padding: 22px 16px;
-
-  position: sticky;
-  top: 0;
-
-  flex-shrink: 0;
+  z-index: 100;
 }
 
 
@@ -106,36 +98,38 @@ textarea {
 
 .sidebar-brand {
   display: flex;
+
   align-items: center;
 
-  gap: 11px;
+  gap: 12px;
 
-  padding: 4px 8px 25px;
+  padding: 8px 10px 28px;
 
   border-bottom: 1px solid #f1f5f9;
 }
 
 .brand-icon {
-  width: 40px;
-  height: 40px;
+  width: 42px;
+  height: 42px;
 
   display: flex;
   align-items: center;
   justify-content: center;
 
-  border-radius: 11px;
+  flex-shrink: 0;
+
+  border-radius: 12px;
 
   background: #eef2ff;
 
   font-size: 21px;
-
-  flex-shrink: 0;
 }
 
 .sidebar-brand h1 {
   margin: 0;
 
-  font-size: 16px;
+  font-size: 17px;
+
   line-height: 1.2;
 
   font-weight: 700;
@@ -160,36 +154,38 @@ textarea {
 
 .sidebar-navigation {
   display: flex;
+
   flex-direction: column;
 
-  gap: 5px;
+  gap: 6px;
 
-  margin-top: 24px;
+  margin-top: 28px;
 }
 
 .nav-item {
   width: 100%;
 
   display: flex;
+
   align-items: center;
 
   gap: 12px;
 
-  padding: 11px 12px;
+  padding: 12px 14px;
 
   border: none;
-  border-radius: 9px;
+
+  border-radius: 10px;
 
   background: transparent;
 
   color: #6b7280;
 
   font-size: 14px;
+
   font-weight: 500;
 
   text-align: left;
-
-  cursor: pointer;
 
   transition:
     background 0.2s ease,
@@ -205,7 +201,7 @@ textarea {
 .nav-item.active {
   background: #eef2ff;
 
-  color: #4338ca;
+  color: #4f46e5;
 
   font-weight: 600;
 }
@@ -214,12 +210,11 @@ textarea {
   width: 22px;
 
   display: flex;
+
   align-items: center;
   justify-content: center;
 
-  font-size: 16px;
-
-  flex-shrink: 0;
+  font-size: 17px;
 }
 
 
@@ -230,53 +225,68 @@ textarea {
 .sidebar-bottom {
   margin-top: auto;
 
-  padding-top: 18px;
+  padding-top: 20px;
 
   border-top: 1px solid #f1f5f9;
 }
 
+
+/* =========================================================
+   USER INFO
+========================================================= */
+
 .user-info {
   display: flex;
+
   align-items: center;
 
   gap: 10px;
 
-  padding: 8px;
+  padding: 10px;
+
+  margin-bottom: 10px;
 }
 
 .user-avatar {
-  width: 34px;
-  height: 34px;
+  width: 36px;
+  height: 36px;
+
+  flex-shrink: 0;
 
   display: flex;
+
   align-items: center;
   justify-content: center;
 
-  border-radius: 9px;
+  border-radius: 50%;
 
   background: #f1f5f9;
 
   font-size: 16px;
+}
 
-  flex-shrink: 0;
+.user-info > div:last-child {
+  min-width: 0;
+
+  display: flex;
+
+  flex-direction: column;
 }
 
 .user-info strong {
-  display: block;
-
-  font-size: 12px;
+  font-size: 13px;
 
   color: #374151;
 }
 
 .user-info span {
-  display: block;
-
   margin-top: 2px;
 
-  font-size: 10px;
+  font-size: 11px;
 
   color: #9ca3af;
+
+  white-space: nowrap;
 }
 
 
@@ -288,15 +298,15 @@ textarea {
   width: 100%;
 
   display: flex;
+
   align-items: center;
 
-  gap: 9px;
+  gap: 10px;
 
-  margin-top: 10px;
-
-  padding: 9px 10px;
+  padding: 10px;
 
   border: none;
+
   border-radius: 8px;
 
   background: transparent;
@@ -304,8 +314,6 @@ textarea {
   color: #6b7280;
 
   font-size: 13px;
-
-  cursor: pointer;
 
   text-align: left;
 
@@ -315,25 +323,24 @@ textarea {
 }
 
 .logout-button:hover {
-  background: #fef2f2;
+  background: #fff1f2;
 
   color: #dc2626;
 }
 
 
 /* =========================================================
-   MAIN AREA
+   MAIN DASHBOARD AREA
 ========================================================= */
 
 .dashboard-main {
-  flex: 1;
-
-  min-width: 0;
+  width: calc(100% - 250px);
 
   min-height: 100vh;
 
-  display: flex;
-  flex-direction: column;
+  margin-left: 250px;
+
+  padding: 32px 40px;
 }
 
 
@@ -342,23 +349,23 @@ textarea {
 ========================================================= */
 
 .dashboard-header {
-  min-height: 82px;
+  max-width: 1200px;
+
+  margin: 0 auto 28px;
 
   display: flex;
+
   align-items: center;
 
-  padding: 18px 32px;
-
-  background: #ffffff;
-
-  border-bottom: 1px solid #e5e7eb;
+  justify-content: space-between;
 }
 
 .dashboard-header h2 {
   margin: 0;
 
-  font-size: 21px;
-  line-height: 1.3;
+  font-size: 28px;
+
+  line-height: 1.2;
 
   font-weight: 700;
 
@@ -366,11 +373,11 @@ textarea {
 }
 
 .dashboard-header p {
-  margin: 4px 0 0;
+  margin: 7px 0 0;
 
-  font-size: 12px;
+  font-size: 14px;
 
-  color: #9ca3af;
+  color: #6b7280;
 }
 
 
@@ -379,32 +386,25 @@ textarea {
 ========================================================= */
 
 .dashboard-content {
-  flex: 1;
-
-  padding: 28px 32px;
-
-  overflow-x: hidden;
-}
-
-.page-content {
   width: 100%;
 
-  max-width: 1100px;
+  max-width: 1200px;
 
   margin: 0 auto;
 }
 
-
-/* =========================================================
-   PAGE HEADING
-========================================================= */
+.page-content {
+  width: 100%;
+}
 
 .page-heading {
   display: flex;
+
   align-items: center;
+
   justify-content: space-between;
 
-  margin-bottom: 22px;
+  margin-bottom: 20px;
 }
 
 .page-heading h2 {
@@ -412,13 +412,11 @@ textarea {
 
   font-size: 22px;
 
-  font-weight: 700;
-
   color: #111827;
 }
 
 .page-heading p {
-  margin: 5px 0 0;
+  margin: 6px 0 0;
 
   font-size: 13px;
 
@@ -427,19 +425,29 @@ textarea {
 
 
 /* =========================================================
-   CHAT PAGE
+   CHAT
 ========================================================= */
 
 .chat-page {
   width: 100%;
-  max-width: 1100px;
 
-  margin: 0 auto;
+  background: #ffffff;
+
+  border: 1px solid #e5e7eb;
+
+  border-radius: 16px;
+
+  padding: 24px;
+
+  box-shadow:
+    0 2px 8px rgba(15, 23, 42, 0.04);
 }
 
 .chat-header {
   display: flex;
+
   align-items: center;
+
   justify-content: space-between;
 
   gap: 20px;
@@ -450,9 +458,7 @@ textarea {
 .chat-header h2 {
   margin: 0;
 
-  font-size: 22px;
-
-  font-weight: 700;
+  font-size: 20px;
 
   color: #111827;
 }
@@ -467,11 +473,11 @@ textarea {
 
 
 /* =========================================================
-   CLEAR CHAT BUTTON
+   CLEAR CHAT
 ========================================================= */
 
 .clear-chat-button {
-  padding: 9px 14px;
+  padding: 8px 13px;
 
   border: 1px solid #e5e7eb;
 
@@ -482,28 +488,18 @@ textarea {
   color: #6b7280;
 
   font-size: 12px;
-  font-weight: 600;
 
-  cursor: pointer;
-
-  transition:
-    background 0.2s ease,
-    border-color 0.2s ease,
-    color 0.2s ease;
+  font-weight: 500;
 }
 
 .clear-chat-button:hover {
-  background: #fef2f2;
+  background: #f8fafc;
 
-  border-color: #fecaca;
-
-  color: #dc2626;
+  color: #111827;
 }
 
 .clear-chat-button:disabled {
   opacity: 0.5;
-
-  cursor: not-allowed;
 }
 
 
@@ -512,33 +508,132 @@ textarea {
 ========================================================= */
 
 .chat-container {
-  height: 540px;
+  height: 520px;
 
   overflow-y: auto;
 
   padding: 20px;
 
-  background: #ffffff;
+  background: #f8fafc;
 
   border: 1px solid #e5e7eb;
 
-  border-radius: 14px;
+  border-radius: 12px;
 
-  margin-bottom: 14px;
-
-  box-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.03);
+  margin-bottom: 16px;
 }
 
 
 /* =========================================================
-   CHAT MESSAGE ROW
+   CHAT EMPTY STATE
+========================================================= */
+
+.chat-empty-state {
+  min-height: 300px;
+
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: center;
+
+  justify-content: center;
+
+  text-align: center;
+
+  padding: 40px 20px;
+}
+
+.chat-empty-icon {
+  width: 64px;
+  height: 64px;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  margin-bottom: 16px;
+
+  border-radius: 18px;
+
+  background: #eef2ff;
+
+  font-size: 30px;
+}
+
+.chat-empty-state h3 {
+  margin: 0 0 8px;
+
+  font-size: 20px;
+
+  color: #111827;
+}
+
+.chat-empty-state p {
+  max-width: 440px;
+
+  margin: 0 auto 20px;
+
+  font-size: 14px;
+
+  line-height: 1.6;
+
+  color: #6b7280;
+}
+
+
+/* =========================================================
+   SUGGESTIONS
+========================================================= */
+
+.suggestion-list {
+  display: flex;
+
+  flex-wrap: wrap;
+
+  justify-content: center;
+
+  gap: 8px;
+}
+
+.suggestion-list button {
+  padding: 9px 12px;
+
+  border: 1px solid #e5e7eb;
+
+  border-radius: 8px;
+
+  background: #ffffff;
+
+  color: #4b5563;
+
+  font-size: 12px;
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.suggestion-list button:hover {
+  background: #f8fafc;
+
+  border-color: #c7d2fe;
+
+  color: #4338ca;
+}
+
+
+/* =========================================================
+   MESSAGE ROW
 ========================================================= */
 
 .message-row {
   display: flex;
 
-  margin-bottom: 18px;
+  margin-bottom: 16px;
+
+  animation: messageAppear 0.2s ease-out;
 }
 
 .user-row {
@@ -551,7 +646,7 @@ textarea {
 
 
 /* =========================================================
-   CHAT MESSAGE
+   MESSAGE
 ========================================================= */
 
 .message {
@@ -575,7 +670,7 @@ textarea {
 }
 
 .ai-message {
-  background: #f8fafc;
+  background: #ffffff;
 
   color: #374151;
 
@@ -592,43 +687,58 @@ textarea {
 .message-sender {
   margin-bottom: 6px;
 
-  font-size: 11px;
+  font-size: 12px;
 
-  font-weight: 700;
-
-  opacity: 0.8;
+  font-weight: 600;
 }
 
 .user-message .message-sender {
-  color: #ffffff;
+  color: #e0e7ff;
 }
 
 .ai-message .message-sender {
-  color: #4b5563;
+  color: #6b7280;
 }
-
-
-/* =========================================================
-   MESSAGE TEXT
-========================================================= */
 
 .message-text {
-  font-size: 14px;
-
   white-space: pre-wrap;
+
+  font-size: 14px;
 }
 
 
 /* =========================================================
-   TYPING INDICATOR
+   THINKING
 ========================================================= */
 
-.typing-indicator {
-  font-size: 13px;
+.thinking {
+  display: flex;
+
+  align-items: center;
 
   color: #6b7280;
 
-  font-style: italic;
+  font-size: 14px;
+}
+
+.thinking-dots {
+  display: inline-flex;
+
+  margin-left: 2px;
+}
+
+.thinking-dots span {
+  animation: thinkingDot 1.4s infinite;
+
+  opacity: 0;
+}
+
+.thinking-dots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.thinking-dots span:nth-child(3) {
+  animation-delay: 0.4s;
 }
 
 
@@ -653,6 +763,8 @@ textarea {
 
   border-radius: 10px;
 
+  outline: none;
+
   background: #ffffff;
 
   color: #111827;
@@ -660,12 +772,8 @@ textarea {
   font-size: 14px;
 
   transition:
-    border-color 0.2s ease,
+    border 0.2s ease,
     box-shadow 0.2s ease;
-}
-
-.input-container input::placeholder {
-  color: #9ca3af;
 }
 
 .input-container input:focus {
@@ -677,14 +785,12 @@ textarea {
 
 .input-container input:disabled {
   background: #f9fafb;
-
-  cursor: not-allowed;
 }
 
 .input-container button {
   min-width: 90px;
 
-  padding: 13px 22px;
+  padding: 13px 20px;
 
   border: none;
 
@@ -697,12 +803,6 @@ textarea {
   font-size: 14px;
 
   font-weight: 600;
-
-  cursor: pointer;
-
-  transition:
-    background 0.2s ease,
-    opacity 0.2s ease;
 }
 
 .input-container button:hover {
@@ -711,8 +811,16 @@ textarea {
 
 .input-container button:disabled {
   opacity: 0.55;
+}
 
-  cursor: not-allowed;
+.chat-input-hint {
+  margin-top: 7px;
+
+  text-align: right;
+
+  font-size: 10px;
+
+  color: #9ca3af;
 }
 
 
@@ -721,9 +829,9 @@ textarea {
 ========================================================= */
 
 .sources {
-  margin-top: 18px;
+  margin-top: 16px;
 
-  padding-top: 15px;
+  padding-top: 14px;
 
   border-top: 1px solid #e5e7eb;
 }
@@ -733,7 +841,7 @@ textarea {
 
   font-size: 11px;
 
-  color: #6b7280;
+  color: #9ca3af;
 
   text-transform: uppercase;
 
@@ -741,43 +849,43 @@ textarea {
 }
 
 .source-card {
-  padding: 11px 13px;
+  padding: 11px 12px;
 
-  margin-bottom: 8px;
+  margin-bottom: 7px;
 
-  background: #ffffff;
+  background: #f8fafc;
 
-  border: 1px solid #e2e8f0;
+  border: 1px solid #e5e7eb;
 
   border-radius: 8px;
 
   font-size: 12px;
+
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease;
 }
 
-.source-card:last-child {
-  margin-bottom: 0;
+.source-card:hover {
+  border-color: #cbd5e1;
+
+  background: #ffffff;
 }
 
 .source-type {
   margin-bottom: 5px;
 
-  font-size: 10px;
-
-  font-weight: 700;
-
   color: #6b7280;
 
-  text-transform: uppercase;
+  font-size: 11px;
 }
 
 .source-title {
-  margin-bottom: 6px;
-
-  font-size: 13px;
+  margin-bottom: 5px;
 
   font-weight: 600;
 
-  color: #111827;
+  color: #374151;
 }
 
 .source-tags {
@@ -787,7 +895,7 @@ textarea {
 
   gap: 5px;
 
-  margin-bottom: 6px;
+  margin-bottom: 5px;
 }
 
 .source-tag {
@@ -802,14 +910,9 @@ textarea {
   font-size: 10px;
 }
 
-.source-chunk {
-  margin-bottom: 4px;
-
-  color: #6b7280;
-}
-
+.source-chunk,
 .source-score {
-  color: #6b7280;
+  color: #9ca3af;
 
   font-size: 11px;
 }
@@ -823,8 +926,8 @@ textarea {
   display: grid;
 
   grid-template-columns:
-    minmax(280px, 0.8fr)
-    minmax(350px, 1.2fr);
+    minmax(0, 0.9fr)
+    minmax(0, 1.1fr);
 
   gap: 20px;
 
@@ -833,76 +936,257 @@ textarea {
 
 
 /* =========================================================
-   DOCUMENT UPLOAD
+   DOCUMENT UPLOAD SECTION
 ========================================================= */
 
 .upload-section {
+  width: 100%;
+
   padding: 20px;
 
   background: #ffffff;
 
   border: 1px solid #e5e7eb;
 
-  border-radius: 12px;
+  border-radius: 14px;
 
   box-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.03);
+    0 2px 8px rgba(15, 23, 42, 0.04);
 }
 
-.upload-section h2 {
-  margin: 0 0 15px;
 
-  font-size: 17px;
+/* =========================================================
+   SECTION TITLE
+========================================================= */
+
+.section-title-row {
+  display: flex;
+
+  align-items: flex-start;
+
+  justify-content: space-between;
+
+  margin-bottom: 18px;
+}
+
+.section-title-row h2 {
+  margin: 0;
+
+  font-size: 18px;
 
   font-weight: 700;
 
   color: #111827;
 }
 
-.upload-section input[type="file"] {
-  width: 100%;
-
-  padding: 10px;
-
-  margin-bottom: 10px;
-
-  border: 1px solid #d1d5db;
-
-  border-radius: 8px;
-
-  background: #ffffff;
-
-  color: #374151;
+.section-description {
+  margin: 5px 0 0;
 
   font-size: 13px;
-}
 
-.upload-section input[type="file"]:focus {
-  border-color: #6366f1;
-}
-
-.upload-section p {
-  font-size: 12px;
+  line-height: 1.5;
 
   color: #6b7280;
 }
 
-.selected-file {
-  margin: 7px 0 10px;
 
-  font-size: 12px;
+/* =========================================================
+   UPLOAD DROPZONE
+========================================================= */
 
-  color: #4b5563;
+.upload-dropzone {
+  width: 100%;
+
+  min-height: 220px;
+
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: center;
+
+  justify-content: center;
+
+  padding: 25px 20px;
+
+  border: 1.5px dashed #cbd5e1;
+
+  border-radius: 12px;
+
+  background: #f8fafc;
+
+  text-align: center;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
 }
+
+.upload-dropzone:hover {
+  background: #f8faff;
+
+  border-color: #818cf8;
+}
+
+.upload-dropzone.drag-active {
+  background: #eef2ff;
+
+  border-color: #6366f1;
+
+  transform: scale(1.01);
+}
+
+
+/* =========================================================
+   UPLOAD ICON
+========================================================= */
+
+.upload-icon {
+  width: 52px;
+  height: 52px;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  margin-bottom: 13px;
+
+  border-radius: 14px;
+
+  background: #eef2ff;
+
+  color: #4f46e5;
+
+  font-size: 25px;
+
+  font-weight: 700;
+}
+
+
+/* =========================================================
+   UPLOAD TEXT
+========================================================= */
+
+.upload-title {
+  margin-bottom: 5px;
+
+  font-size: 15px;
+
+  font-weight: 600;
+
+  color: #374151;
+}
+
+.upload-subtitle {
+  margin-bottom: 12px;
+
+  font-size: 13px;
+
+  color: #6b7280;
+}
+
+.upload-formats {
+  padding: 5px 9px;
+
+  border-radius: 6px;
+
+  background: #ffffff;
+
+  color: #9ca3af;
+
+  font-size: 10px;
+
+  font-weight: 600;
+
+  letter-spacing: 0.3px;
+}
+
+
+/* =========================================================
+   SELECTED FILE
+========================================================= */
+
+.selected-file-card {
+  display: flex;
+
+  align-items: center;
+
+  gap: 12px;
+
+  margin-top: 14px;
+
+  padding: 12px;
+
+  border: 1px solid #e5e7eb;
+
+  border-radius: 9px;
+
+  background: #f8fafc;
+}
+
+.file-icon {
+  width: 38px;
+  height: 38px;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
+
+  border-radius: 8px;
+
+  background: #eef2ff;
+
+  font-size: 17px;
+}
+
+.selected-file-info {
+  min-width: 0;
+}
+
+.selected-file-name {
+  overflow: hidden;
+
+  text-overflow: ellipsis;
+
+  white-space: nowrap;
+
+  font-size: 13px;
+
+  font-weight: 600;
+
+  color: #374151;
+}
+
+.selected-file-size {
+  margin-top: 3px;
+
+  font-size: 11px;
+
+  color: #9ca3af;
+}
+
+
+/* =========================================================
+   UPLOAD BUTTON
+========================================================= */
 
 .upload-button {
   width: 100%;
+
+  margin-top: 14px;
 
   padding: 12px;
 
   border: none;
 
-  border-radius: 8px;
+  border-radius: 9px;
 
   background: #4f46e5;
 
@@ -912,29 +1196,38 @@ textarea {
 
   font-weight: 600;
 
-  cursor: pointer;
-
   transition:
     background 0.2s ease,
     opacity 0.2s ease;
 }
 
-.upload-button:hover {
+.upload-button:hover:not(:disabled) {
   background: #4338ca;
 }
 
 .upload-button:disabled {
-  opacity: 0.55;
-
-  cursor: not-allowed;
+  opacity: 0.5;
 }
 
+
+/* =========================================================
+   UPLOAD MESSAGE
+========================================================= */
+
 .upload-message {
-  margin: 10px 0 0;
+  margin-top: 10px;
+
+  padding: 9px 11px;
+
+  border-radius: 7px;
+
+  background: #f8fafc;
+
+  color: #4b5563;
 
   font-size: 12px;
 
-  color: #4b5563;
+  line-height: 1.5;
 }
 
 
@@ -942,46 +1235,81 @@ textarea {
    DOCUMENT LIST
 ========================================================= */
 
-.document-list {
+.documents-grid > div:last-child {
   width: 100%;
-}
 
-.document-list h2 {
-  margin: 0 0 15px;
-
-  font-size: 17px;
-
-  font-weight: 700;
-
-  color: #111827;
-}
-
-.document-card {
-  padding: 16px;
-
-  margin-bottom: 10px;
+  padding: 20px;
 
   background: #ffffff;
 
   border: 1px solid #e5e7eb;
 
-  border-radius: 10px;
-
-  transition:
-    border-color 0.2s ease,
-    box-shadow 0.2s ease;
-}
-
-.document-card:hover {
-  border-color: #c7d2fe;
+  border-radius: 14px;
 
   box-shadow:
-    0 2px 8px rgba(0, 0, 0, 0.04);
+    0 2px 8px rgba(15, 23, 42, 0.04);
+}
+
+.documents-grid > div:last-child > h2 {
+  margin: 0 0 16px;
+
+  font-size: 18px;
+
+  color: #111827;
 }
 
 
 /* =========================================================
-   MEMORIES GRID
+   DOCUMENT MEMORY CARD
+========================================================= */
+
+.documents-grid .memory-card {
+  padding: 14px;
+
+  margin-bottom: 10px;
+
+  background: #f8fafc;
+
+  border: 1px solid #e5e7eb;
+
+  border-radius: 10px;
+}
+
+.documents-grid .memory-header {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  gap: 10px;
+}
+
+.documents-grid .memory-header h3 {
+  margin: 0;
+
+  overflow: hidden;
+
+  text-overflow: ellipsis;
+
+  white-space: nowrap;
+
+  font-size: 14px;
+
+  color: #374151;
+}
+
+.documents-grid .memory-header p {
+  margin: 4px 0 0;
+
+  color: #9ca3af;
+
+  font-size: 11px;
+}
+
+
+/* =========================================================
+   MEMORIES PAGE
 ========================================================= */
 
 .memories-grid {
@@ -989,7 +1317,7 @@ textarea {
 
   grid-template-columns:
     minmax(280px, 0.8fr)
-    minmax(350px, 1.2fr);
+    minmax(0, 1.2fr);
 
   gap: 20px;
 
@@ -1008,19 +1336,15 @@ textarea {
 
   border: 1px solid #e5e7eb;
 
-  border-radius: 12px;
+  border-radius: 14px;
 
   box-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.03);
+    0 2px 8px rgba(15, 23, 42, 0.04);
 }
 
 .memory-form h2,
 .memory-form h3 {
-  margin: 0 0 15px;
-
-  font-size: 17px;
-
-  font-weight: 700;
+  margin-top: 0;
 
   color: #111827;
 }
@@ -1029,9 +1353,9 @@ textarea {
 .memory-form textarea {
   width: 100%;
 
-  padding: 12px 13px;
+  padding: 11px 12px;
 
-  margin-bottom: 11px;
+  margin-bottom: 10px;
 
   border: 1px solid #d1d5db;
 
@@ -1039,20 +1363,11 @@ textarea {
 
   outline: none;
 
-  font-size: 13px;
-
   background: #ffffff;
 
   color: #111827;
 
-  transition:
-    border-color 0.2s ease,
-    box-shadow 0.2s ease;
-}
-
-.memory-form input::placeholder,
-.memory-form textarea::placeholder {
-  color: #9ca3af;
+  font-size: 14px;
 }
 
 .memory-form input:focus,
@@ -1060,19 +1375,19 @@ textarea {
   border-color: #6366f1;
 
   box-shadow:
-    0 0 0 3px rgba(99, 102, 241, 0.08);
+    0 0 0 3px rgba(99, 102, 241, 0.1);
 }
 
 .memory-form textarea {
   resize: vertical;
 
-  min-height: 110px;
+  min-height: 120px;
 }
 
 .memory-form button {
   width: 100%;
 
-  padding: 12px;
+  padding: 11px;
 
   border: none;
 
@@ -1082,25 +1397,11 @@ textarea {
 
   color: #ffffff;
 
-  font-size: 13px;
-
   font-weight: 600;
-
-  cursor: pointer;
-
-  transition:
-    background 0.2s ease,
-    opacity 0.2s ease;
 }
 
 .memory-form button:hover {
-  background: #000000;
-}
-
-.memory-form button:disabled {
-  opacity: 0.55;
-
-  cursor: not-allowed;
+  background: #1f2937;
 }
 
 
@@ -1108,17 +1409,14 @@ textarea {
    MEMORY LIST
 ========================================================= */
 
-.memory-list {
-  width: 100%;
+.memories-grid > div:last-child {
+  min-width: 0;
 }
 
-.memory-list h2,
-.memory-list h3 {
-  margin: 0 0 15px;
+.memories-grid > div:last-child > h2 {
+  margin: 0 0 16px;
 
-  font-size: 17px;
-
-  font-weight: 700;
+  font-size: 18px;
 
   color: #111827;
 }
@@ -1133,22 +1431,14 @@ textarea {
 
   margin-bottom: 12px;
 
-  border: 1px solid #e5e7eb;
-
-  border-radius: 10px;
-
   background: #ffffff;
 
-  transition:
-    border-color 0.2s ease,
-    box-shadow 0.2s ease;
-}
+  border: 1px solid #e5e7eb;
 
-.memory-card:hover {
-  border-color: #d1d5db;
+  border-radius: 12px;
 
   box-shadow:
-    0 2px 8px rgba(0, 0, 0, 0.03);
+    0 2px 6px rgba(15, 23, 42, 0.03);
 }
 
 .memory-header {
@@ -1166,7 +1456,7 @@ textarea {
 .memory-header h3 {
   margin: 0;
 
-  font-size: 15px;
+  font-size: 16px;
 
   color: #111827;
 }
@@ -1174,49 +1464,11 @@ textarea {
 .memory-card p {
   margin: 0 0 12px;
 
-  line-height: 1.5;
-
-  font-size: 13px;
+  line-height: 1.6;
 
   color: #4b5563;
-}
 
-
-/* =========================================================
-   MEMORY EDIT MODE
-========================================================= */
-
-.memory-card input,
-.memory-card textarea {
-  width: 100%;
-
-  padding: 11px 12px;
-
-  margin-bottom: 10px;
-
-  border: 1px solid #d1d5db;
-
-  border-radius: 8px;
-
-  background: #ffffff;
-
-  color: #111827;
-
-  font-size: 13px;
-
-  outline: none;
-}
-
-.memory-card input:focus,
-.memory-card textarea:focus {
-  border-color: #6366f1;
-
-  box-shadow:
-    0 0 0 3px rgba(99, 102, 241, 0.08);
-}
-
-.memory-card textarea {
-  resize: vertical;
+  font-size: 14px;
 }
 
 
@@ -1224,32 +1476,24 @@ textarea {
    MEMORY BUTTONS
 ========================================================= */
 
-.memory-card button {
-  padding: 7px 11px;
-
-  margin-left: 6px;
+.memory-header button {
+  padding: 6px 10px;
 
   border: 1px solid #e5e7eb;
 
-  border-radius: 7px;
+  border-radius: 6px;
 
   background: #ffffff;
 
-  color: #374151;
+  color: #6b7280;
 
   font-size: 12px;
-
-  cursor: pointer;
-
-  transition:
-    background 0.2s ease,
-    border-color 0.2s ease;
 }
 
-.memory-card button:hover {
+.memory-header button:hover {
   background: #f8fafc;
 
-  border-color: #d1d5db;
+  color: #111827;
 }
 
 
@@ -1258,36 +1502,26 @@ textarea {
 ========================================================= */
 
 .delete-button {
-  padding: 6px 10px !important;
+  padding: 6px 10px;
 
-  border: 1px solid #fecaca !important;
+  border: 1px solid #fecaca;
 
-  border-radius: 6px !important;
+  border-radius: 6px;
 
-  background: #fff1f2 !important;
+  background: #fff1f2;
 
-  color: #dc2626 !important;
+  color: #dc2626;
 
-  font-size: 12px !important;
-
-  cursor: pointer;
+  font-size: 12px;
 }
 
 .delete-button:hover {
-  background: #fee2e2 !important;
-
-  border-color: #fca5a5 !important;
-}
-
-.delete-button:disabled {
-  opacity: 0.5;
-
-  cursor: not-allowed;
+  background: #fee2e2;
 }
 
 
 /* =========================================================
-   MEMORY TAGS
+   TAGS
 ========================================================= */
 
 .tags {
@@ -1314,6 +1548,37 @@ textarea {
 
 
 /* =========================================================
+   THINKING ANIMATION
+========================================================= */
+
+@keyframes thinkingDot {
+  0%,
+  60%,
+  100% {
+    opacity: 0;
+  }
+
+  30% {
+    opacity: 1;
+  }
+}
+
+@keyframes messageAppear {
+  from {
+    opacity: 0;
+
+    transform: translateY(5px);
+  }
+
+  to {
+    opacity: 1;
+
+    transform: translateY(0);
+  }
+}
+
+
+/* =========================================================
    SCROLLBAR
 ========================================================= */
 
@@ -1322,7 +1587,7 @@ textarea {
 }
 
 .chat-container::-webkit-scrollbar-track {
-  background: #f8fafc;
+  background: #f1f5f9;
 }
 
 .chat-container::-webkit-scrollbar-thumb {
@@ -1337,27 +1602,24 @@ textarea {
 
 
 /* =========================================================
-   GENERAL SCROLLBAR
+   TABLET
 ========================================================= */
 
-::-webkit-scrollbar {
-  width: 7px;
-  height: 7px;
-}
+@media (max-width: 1000px) {
 
-::-webkit-scrollbar-track {
-  background: #f8fafc;
-}
+  .documents-grid {
+    grid-template-columns: 1fr;
+  }
 
-::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  .memories-grid {
+    grid-template-columns: 1fr;
+  }
 
-  border-radius: 10px;
 }
 
 
 /* =========================================================
-   RESPONSIVE — TABLET
+   TABLET
 ========================================================= */
 
 @media (max-width: 900px) {
@@ -1366,73 +1628,63 @@ textarea {
     width: 210px;
   }
 
-  .dashboard-header {
-    padding-left: 22px;
-    padding-right: 22px;
+  .dashboard-main {
+    width: calc(100% - 210px);
+
+    margin-left: 210px;
+
+    padding: 28px 24px;
   }
 
-  .dashboard-content {
-    padding: 22px;
-  }
-
-  .documents-grid,
-  .memories-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .message {
-    max-width: 85%;
-  }
 }
 
 
 /* =========================================================
-   RESPONSIVE — MOBILE
+   MOBILE
 ========================================================= */
 
 @media (max-width: 700px) {
 
   .dashboard {
-    flex-direction: column;
+    display: block;
   }
 
+
   .sidebar {
+    position: relative;
+
     width: 100%;
 
     min-height: auto;
 
-    position: static;
-
-    padding: 12px;
+    padding: 14px;
 
     border-right: none;
 
     border-bottom: 1px solid #e5e7eb;
   }
 
+
   .sidebar-brand {
-    padding-bottom: 12px;
+    padding: 4px 6px 14px;
   }
+
 
   .sidebar-navigation {
     flex-direction: row;
 
-    margin-top: 12px;
+    margin-top: 14px;
 
-    gap: 5px;
+    overflow-x: auto;
   }
+
 
   .nav-item {
-    justify-content: center;
+    flex: 0 0 auto;
 
-    padding: 9px 6px;
-
-    font-size: 12px;
+    width: auto;
   }
 
-  .nav-item .nav-icon {
-    display: none;
-  }
 
   .sidebar-bottom {
     display: flex;
@@ -1443,106 +1695,164 @@ textarea {
 
     gap: 10px;
 
-    margin-top: 10px;
+    margin-top: 12px;
 
-    padding-top: 10px;
+    padding-top: 12px;
   }
+
 
   .user-info {
-    padding: 0;
+    margin: 0;
   }
+
 
   .logout-button {
     width: auto;
 
-    margin-top: 0;
+    padding: 9px 12px;
   }
+
+
+  .dashboard-main {
+    width: 100%;
+
+    margin-left: 0;
+
+    padding: 20px 15px;
+  }
+
 
   .dashboard-header {
-    min-height: 65px;
-
-    padding: 15px;
+    margin-bottom: 20px;
   }
 
-  .dashboard-content {
-    padding: 15px;
+
+  .dashboard-header h2 {
+    font-size: 24px;
   }
+
+
+  .chat-page {
+    padding: 16px;
+  }
+
 
   .chat-header {
     align-items: flex-start;
 
     flex-direction: column;
-
-    gap: 12px;
   }
 
-  .clear-chat-button {
-    width: 100%;
-  }
 
   .chat-container {
-    height: 500px;
+    height: 450px;
 
-    padding: 12px;
+    padding: 14px;
   }
+
 
   .message {
-    max-width: 92%;
+    max-width: 90%;
   }
+
 
   .input-container {
     flex-direction: column;
   }
 
+
   .input-container button {
     width: 100%;
   }
 
-  .memory-header {
-    align-items: flex-start;
 
+  .upload-dropzone {
+    min-height: 190px;
+  }
+
+
+  .suggestion-list {
     flex-direction: column;
+
+    width: 100%;
+  }
+
+
+  .suggestion-list button {
+    width: 100%;
+  }
+
+
+  .chat-empty-state {
+    min-height: 250px;
+
+    padding: 25px 10px;
+  }
+
+
+  .chat-empty-state h3 {
+    font-size: 18px;
+  }
+
+
+  .chat-empty-state p {
+    font-size: 13px;
+  }
+
+
+  .chat-input-hint {
+    text-align: center;
   }
 
 }
 
 
 /* =========================================================
-   RESPONSIVE — SMALL MOBILE
+   SMALL MOBILE
 ========================================================= */
 
 @media (max-width: 450px) {
 
-  .sidebar-brand h1 {
-    font-size: 14px;
+  .dashboard-main {
+    padding: 15px 10px;
   }
+
+
+  .sidebar-brand h1 {
+    font-size: 15px;
+  }
+
 
   .sidebar-brand span {
     font-size: 10px;
   }
 
+
   .nav-item {
-    font-size: 11px;
+    padding: 9px 11px;
+
+    font-size: 12px;
   }
+
+
+  .nav-icon {
+    font-size: 15px;
+  }
+
 
   .dashboard-header h2 {
-    font-size: 18px;
+    font-size: 22px;
   }
 
-  .dashboard-content {
-    padding: 12px;
-  }
 
   .chat-container {
-    height: 450px;
+    height: 400px;
   }
 
-  .message {
-    max-width: 95%;
-  }
 
-  .message-text {
-    font-size: 13px;
+  .upload-section,
+  .memory-form {
+    padding: 16px;
   }
 
 }

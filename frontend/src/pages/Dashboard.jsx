@@ -6,7 +6,6 @@ import DocumentList from "../components/Documents/DocumentList";
 import MemoryForm from "../components/Memories/MemoryForm";
 import MemoryList from "../components/Memories/MemoryList";
 
-
 function Dashboard() {
 
   const [activePage, setActivePage] = useState("chat");
