@@ -1,3 +1,5 @@
+import time
+
 from fastapi import APIRouter, Depends, HTTPException
 
 from app.models.schemas import ChatRequest
@@ -88,7 +90,9 @@ def filter_results(
 @router.post("/search")
 def search(
     request: ChatRequest,
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(
+        get_current_user
+    )
 ):
 
     # ==========================================
@@ -104,19 +108,39 @@ def search(
             detail="Please enter a question."
         )
 
+
     # ==========================================
     # Build conversation-aware search query
     # ==========================================
 
     try:
 
+        start = time.perf_counter()
+
         search_query = build_search_query(
             question=question,
             user_id=current_user.id
         )
 
+        print(
+            f"Query building: "
+            f"{time.perf_counter() - start:.2f}s"
+        )
+
+
+        # ==========================================
+        # Create query embedding
+        # ==========================================
+
+        start = time.perf_counter()
+
         query_embedding = create_embedding(
             search_query
+        )
+
+        print(
+            f"Embedding: "
+            f"{time.perf_counter() - start:.2f}s"
         )
 
     except Exception as error:
@@ -133,16 +157,24 @@ def search(
             )
         ) from error
 
+
     # ==========================================
     # Search Qdrant ONLY for this user
     # ==========================================
 
     try:
 
+        start = time.perf_counter()
+
         results = search_embeddings(
             query_embedding=query_embedding,
             user_id=current_user.id,
             limit=10
+        )
+
+        print(
+            f"Qdrant search: "
+            f"{time.perf_counter() - start:.2f}s"
         )
 
     except QdrantServiceError as error:
@@ -156,24 +188,29 @@ def search(
             detail=str(error)
         ) from error
 
+
     # ==========================================
-    # Diversify search results
+    # Diversify + Re-rank results
     # ==========================================
+
+    start = time.perf_counter()
 
     results = filter_results(
         results,
         max_chunks_per_document=2
     )
 
-    # ==========================================
-    # Re-rank results
-    # ==========================================
-
     results = rerank_results(
         results=results,
         question=question,
         max_results=5
     )
+
+    print(
+        f"Filtering + reranking: "
+        f"{time.perf_counter() - start:.2f}s"
+    )
+
 
     # ==========================================
     # Build context
@@ -184,6 +221,7 @@ def search(
     for result in results:
 
         payload = result.payload or {}
+
 
         # --------------------------------------
         # Saved memory
@@ -221,6 +259,7 @@ Tags:
 """
             )
 
+
         # --------------------------------------
         # Uploaded document
         # --------------------------------------
@@ -257,9 +296,11 @@ Content:
 """
             )
 
+
     context = "\n\n".join(
         context_parts
     )
+
 
     # ==========================================
     # Build sources BEFORE generating answer
@@ -270,6 +311,7 @@ Content:
     for result in results:
 
         payload = result.payload or {}
+
 
         # --------------------------------------
         # Memory source
@@ -292,6 +334,7 @@ Content:
                 }
             )
 
+
         # --------------------------------------
         # Document source
         # --------------------------------------
@@ -312,17 +355,25 @@ Content:
                 }
             )
 
+
     # ==========================================
     # Generate answer using Llama
     # ==========================================
 
     try:
 
+        start = time.perf_counter()
+
         answer = generate_answer(
             question=question,
             context=context,
             user_id=current_user.id,
             sources=sources
+        )
+
+        print(
+            f"LLM generation: "
+            f"{time.perf_counter() - start:.2f}s"
         )
 
     except Exception as error:
@@ -339,6 +390,7 @@ Content:
             )
         ) from error
 
+
     # ==========================================
     # Return response
     # ==========================================
@@ -348,5 +400,3 @@ Content:
         "answer": answer,
         "sources": sources
     }
-
-

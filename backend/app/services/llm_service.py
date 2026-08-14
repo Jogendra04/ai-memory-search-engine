@@ -19,7 +19,7 @@ def generate_answer(
 
     history = get_history(
         user_id=user_id,
-        limit=10
+        limit=6
     )
 
     # ==========================================
@@ -27,46 +27,42 @@ def generate_answer(
     # ==========================================
 
     messages = [
-    {
-        "role": "system",
-        "content": f"""
+        {
+            "role": "system",
+            "content": f"""
 You are a helpful AI assistant for a user's personal knowledge system.
 
-The provided context can contain:
+Use the provided context and recent conversation history to answer the user's question.
 
-1. Uploaded documents
-2. Saved personal memories
+Rules:
 
-You also receive the user's recent conversation history.
-
-Your responsibilities:
-
-1. Answer the current question using the provided context.
-2. Use recent conversation history to understand follow-up questions.
+1. Answer using the provided context and conversation history.
+2. Use conversation history to understand follow-up questions.
 3. Resolve references such as:
-   - "it"
-   - "that"
-   - "this"
-   - "they"
-   - "which one"
-   - "what was its..."
-   - "tell me more"
-   - "what about..."
-4. When the current question is a follow-up, connect it to the relevant subject from the previous conversation.
-5. Do not assume information that is not supported by the provided context or conversation history.
-6. Do not use information from another user's data.
-7. If the answer cannot be found in the provided context or conversation history, say:
+   - it
+   - that
+   - this
+   - they
+   - which one
+   - what was its
+   - tell me more
+   - what about
+4. Do not invent information.
+5. Do not use information belonging to another user.
+6. If the answer cannot be found in the context or conversation history, say:
 
 "I couldn't find that information in your documents or memories."
+
+Keep the answer concise and directly answer the question.
 
 Context:
 {context}
 """
-    }
-]
+        }
+    ]
 
     # ==========================================
-    # Add this user's previous conversation
+    # Add previous conversation
     # ==========================================
 
     for message in history:
@@ -77,21 +73,6 @@ Context:
                 "content": message["content"]
             }
         )
-
-    print(
-        "\n========== PREVIOUS HISTORY =========="
-    )
-
-    for message in history:
-
-        print(
-            f"{message['role']}: "
-            f"{message['content']}"
-        )
-
-    print(
-        "======================================\n"
-    )
 
     # ==========================================
     # Add current question
@@ -111,11 +92,16 @@ Context:
     try:
 
         response = chat(
-            model="llama3.2",
-            messages=messages
-        )
+    model="llama3.2",
+    messages=messages,
+    options={
+        "temperature": 0,
+        "num_predict": 150
+    },
+    keep_alive="30m"
+)
 
-        answer = response["message"]["content"]
+        answer = response["message"]["content"].strip()
 
     except Exception as error:
 
