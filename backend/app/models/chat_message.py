@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, String, Text, ForeignKey
+from sqlalchemy import Column, Integer, String, Text, ForeignKey, DateTime
+from datetime import datetime
 
 from app.database.database import Base
 
@@ -33,4 +34,11 @@ class ChatMessage(Base):
     sources = Column(
         Text,
         nullable=True
+    )
+
+    created_at = Column(
+        DateTime,
+        default=datetime.utcnow,
+        nullable=False,
+        index=True
     )

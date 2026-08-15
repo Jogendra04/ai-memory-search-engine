@@ -1,4 +1,5 @@
 import json
+from datetime import datetime, date
 
 from app.database.database import SessionLocal
 from app.models.chat_message import ChatMessage
@@ -25,7 +26,8 @@ def add_message(
             content=content,
             sources=json.dumps(
                 sources or []
-            )
+            ),
+            created_at=datetime.utcnow()
         )
 
         db.add(message)
@@ -44,7 +46,7 @@ def add_message(
 
 
 # ==========================================
-# Get Chat History
+# Get Today's Chat History
 # ==========================================
 
 def get_history(
@@ -56,24 +58,30 @@ def get_history(
 
     try:
 
+        today = date.today()
+
+        start_of_day = datetime.combine(
+            today,
+            datetime.min.time()
+        )
+
+        end_of_day = datetime.combine(
+            today,
+            datetime.max.time()
+        )
+
         messages = (
             db.query(ChatMessage)
             .filter(
-                ChatMessage.user_id == user_id
+                ChatMessage.user_id == user_id,
+                ChatMessage.created_at >= start_of_day,
+                ChatMessage.created_at <= end_of_day
             )
             .order_by(
-                ChatMessage.id.desc()
+                ChatMessage.id.asc()
             )
             .limit(limit)
             .all()
-        )
-
-        messages.reverse()
-
-        print(
-            f"Loaded chat history: "
-            f"user_id={user_id}, "
-            f"messages={len(messages)}"
         )
 
         history = []
@@ -101,6 +109,12 @@ def get_history(
                     "sources": sources
                 }
             )
+
+        print(
+            f"Loaded today's chat history: "
+            f"user_id={user_id}, "
+            f"messages={len(history)}"
+        )
 
         return history
 

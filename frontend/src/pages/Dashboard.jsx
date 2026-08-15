@@ -6,13 +6,46 @@ import DocumentList from "../components/Documents/DocumentList";
 import MemoryForm from "../components/Memories/MemoryForm";
 import MemoryList from "../components/Memories/MemoryList";
 
+
+// ==========================================
+// Get Logged-in User
+// ==========================================
+
+function getLoggedInUser() {
+
+  const name =
+    localStorage.getItem("user_name") ||
+    "User";
+
+  const email =
+    localStorage.getItem("user_email") ||
+    "Personal AI";
+
+  return {
+    name,
+    email,
+  };
+}
+
+
+// ==========================================
+// Dashboard
+// ==========================================
+
 function Dashboard() {
 
-  const [activePage, setActivePage] = useState("chat");
+  const [activePage, setActivePage] =
+    useState("chat");
 
-  const [documentRefresh, setDocumentRefresh] = useState(0);
+  const [documentRefresh, setDocumentRefresh] =
+    useState(0);
 
-  const [memoryRefresh, setMemoryRefresh] = useState(0);
+  const [memoryRefresh, setMemoryRefresh] =
+    useState(0);
+
+  const [user] = useState(
+    getLoggedInUser()
+  );
 
 
   // ==========================================
@@ -29,7 +62,17 @@ function Dashboard() {
       return;
     }
 
-    localStorage.removeItem("access_token");
+    localStorage.removeItem(
+      "access_token"
+    );
+
+    localStorage.removeItem(
+      "user_name"
+    );
+
+    localStorage.removeItem(
+      "user_email"
+    );
 
     window.location.href = "/login";
   };
@@ -68,11 +111,7 @@ function Dashboard() {
     // ----------------------------------------
 
     if (activePage === "chat") {
-
-      return (
-        <Chat />
-      );
-
+      return <Chat />;
     }
 
 
@@ -83,7 +122,6 @@ function Dashboard() {
     if (activePage === "documents") {
 
       return (
-
         <div className="page-content">
 
           <div className="page-heading">
@@ -113,7 +151,6 @@ function Dashboard() {
               }
             />
 
-
             <DocumentList
               refresh={documentRefresh}
             />
@@ -121,9 +158,7 @@ function Dashboard() {
           </div>
 
         </div>
-
       );
-
     }
 
 
@@ -134,7 +169,6 @@ function Dashboard() {
     if (activePage === "memories") {
 
       return (
-
         <div className="page-content">
 
           <div className="page-heading">
@@ -165,7 +199,6 @@ function Dashboard() {
               }
             />
 
-
             <MemoryList
               refresh={memoryRefresh}
             />
@@ -173,11 +206,11 @@ function Dashboard() {
           </div>
 
         </div>
-
       );
-
     }
 
+
+    return null;
   };
 
 
@@ -224,6 +257,9 @@ function Dashboard() {
 
         <nav className="sidebar-navigation">
 
+
+          {/* Chat */}
+
           <button
             className={
               activePage === "chat"
@@ -246,6 +282,8 @@ function Dashboard() {
           </button>
 
 
+          {/* Documents */}
+
           <button
             className={
               activePage === "documents"
@@ -267,6 +305,8 @@ function Dashboard() {
 
           </button>
 
+
+          {/* Memories */}
 
           <button
             className={
@@ -292,9 +332,14 @@ function Dashboard() {
         </nav>
 
 
-        {/* Sidebar Bottom */}
+        {/* ======================================
+            Sidebar Bottom
+        ====================================== */}
 
         <div className="sidebar-bottom">
+
+
+          {/* User Profile */}
 
           <div className="user-info">
 
@@ -302,20 +347,22 @@ function Dashboard() {
               👤
             </div>
 
-            <div>
+            <div className="user-details">
 
               <strong>
-                My Workspace
+                {user.name}
               </strong>
 
               <span>
-                Personal AI
+                {user.email}
               </span>
 
             </div>
 
           </div>
 
+
+          {/* Logout */}
 
           <button
             className="logout-button"
@@ -326,7 +373,9 @@ function Dashboard() {
               ↪
             </span>
 
-            Logout
+            <span>
+              Logout
+            </span>
 
           </button>
 
@@ -372,9 +421,7 @@ function Dashboard() {
       </main>
 
     </div>
-
   );
-
 }
 
 

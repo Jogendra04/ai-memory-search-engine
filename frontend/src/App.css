@@ -2161,3 +2161,92 @@ button:disabled {
   }
 
 }
+/* ==========================================
+   WORKSPACE BUTTON
+========================================== */
+
+.user-info {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  padding: 10px;
+
+  margin-bottom: 10px;
+
+  border: none;
+  border-radius: 8px;
+
+  background: transparent;
+
+  font: inherit;
+  text-align: left;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
+}
+
+.user-info:hover {
+  background: #f8fafc;
+}
+
+.user-info strong {
+  display: block;
+
+  font-size: 13px;
+  color: #374151;
+}
+
+.user-info span {
+  display: block;
+
+  margin-top: 2px;
+
+  font-size: 11px;
+  color: #9ca3af;
+}
+.workspace-panel {
+  margin: 10px 0;
+  padding: 14px;
+  border-radius: 10px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
+.workspace-panel-icon {
+  font-size: 24px;
+  margin-bottom: 6px;
+}
+
+.workspace-panel h3 {
+  margin: 0;
+  font-size: 15px;
+}
+
+.workspace-panel p {
+  margin: 4px 0 12px;
+  font-size: 12px;
+  color: #64748b;
+}
+
+.workspace-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 0;
+  border-top: 1px solid #e2e8f0;
+}
+
+.workspace-info span:first-child {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.workspace-info span:last-child {
+  font-size: 11px;
+  color: #64748b;
+}

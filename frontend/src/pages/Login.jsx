@@ -42,11 +42,21 @@ function Login() {
       }
 
       localStorage.setItem(
-        "access_token",
-        data.access_token
-      );
+  "access_token",
+  data.access_token
+);
 
-      navigate("/dashboard");
+localStorage.setItem(
+  "user_name",
+  data.name
+);
+
+localStorage.setItem(
+  "user_email",
+  data.email
+);
+
+navigate("/dashboard");
     } catch (error) {
       console.error(error);
 
