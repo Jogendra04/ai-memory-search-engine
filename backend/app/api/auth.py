@@ -16,38 +16,28 @@ from app.core.security import (
     create_access_token
 )
 
-
 router = APIRouter()
 
-
-# ==========================================
 # Register
-# ==========================================
-
 @router.post("/register")
 def register(
     request: RegisterRequest,
     db: Session = Depends(get_db)
 ):
-
     existing_user = (
         db.query(User)
         .filter(User.email == request.email)
         .first()
     )
-
     if existing_user:
 
         raise HTTPException(
             status_code=400,
             detail="Email already registered."
         )
-
-
     hashed_password = app.core.security.hash_password(
         request.password
     )
-
 
     user = User(
         name=request.name,
@@ -55,13 +45,9 @@ def register(
         password=hashed_password
     )
 
-
     db.add(user)
-
     db.commit()
-
     db.refresh(user)
-
 
     return {
         "message": "User registered successfully.",
@@ -73,10 +59,7 @@ def register(
     }
 
 
-# ==========================================
 # Login
-# ==========================================
-
 @router.post("/login")
 def login(
     request: LoginRequest,
@@ -109,9 +92,7 @@ def login(
         )
 
 
-    # ======================================
     # Create Access Token
-    # ======================================
 
     access_token = create_access_token(
         {
@@ -120,9 +101,7 @@ def login(
     )
 
 
-    # ======================================
     # Login Response
-    # ======================================
 
     return {
         "access_token": access_token,

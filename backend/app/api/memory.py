@@ -14,7 +14,6 @@ from app.services.memory_service import (
 
 router = APIRouter()
 
-
 @router.post("/memory")
 def create_memory(
     request: MemoryRequest,
@@ -30,7 +29,6 @@ def create_memory(
         user_id=current_user.id
     )
 
-
 @router.get("/memories")
 def get_memories(
     current_user: User = Depends(
@@ -43,7 +41,6 @@ def get_memories(
             current_user.id
         )
     }
-
 
 @router.put("/memory/{memory_id}")
 def update_memory_endpoint(
@@ -61,7 +58,6 @@ def update_memory_endpoint(
         tags=request.tags,
         user_id=current_user.id
     )
-
 
 @router.delete("/memory/{memory_id}")
 def delete_memory_endpoint(

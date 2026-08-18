@@ -1,6 +1,5 @@
 from app.services.chat_history import get_history
 
-
 def build_search_query(
     question,
     user_id,
@@ -11,26 +10,20 @@ def build_search_query(
     when the current question appears to be a follow-up.
     """
 
-    # ==========================================
     # Get recent conversation
-    # ==========================================
 
     history = get_history(
         user_id=user_id,
         limit=limit
     )
 
-    # ==========================================
     # No previous conversation
-    # ==========================================
 
     if not history:
 
         return question
 
-    # ==========================================
     # Build conversation context
-    # ==========================================
 
     conversation_parts = []
 
@@ -52,9 +45,7 @@ def build_search_query(
                 f"{role}: {content}"
             )
 
-    # ==========================================
     # Add current question
-    # ==========================================
 
     conversation_parts.append(
         f"user: {question}"
@@ -64,9 +55,7 @@ def build_search_query(
         conversation_parts
     )
 
-    # ==========================================
     # Build semantic search query
-    # ==========================================
 
     search_query = (
         "Use the following recent conversation "
@@ -80,9 +69,7 @@ def build_search_query(
         f"{question}"
     )
 
-    # ==========================================
     # Debug output
-    # ==========================================
 
     print(
         "\n========== SEARCH QUERY =========="

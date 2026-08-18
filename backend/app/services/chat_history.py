@@ -5,9 +5,7 @@ from app.database.database import SessionLocal
 from app.models.chat_message import ChatMessage
 
 
-# ==========================================
 # Save Chat Message
-# ==========================================
 
 def add_message(
     user_id,
@@ -45,9 +43,7 @@ def add_message(
         db.close()
 
 
-# ==========================================
 # Get Today's Chat History
-# ==========================================
 
 def get_history(
     user_id,
@@ -123,9 +119,7 @@ def get_history(
         db.close()
 
 
-# ==========================================
 # Clear Chat History
-# ==========================================
 
 def clear_history(user_id):
     """

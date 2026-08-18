@@ -12,9 +12,7 @@ from app.services.qdrant_service import (
 )
 
 
-# ==========================================
 # Supported File Types
-# ==========================================
 
 SUPPORTED_EXTENSIONS = {
     ".pdf",
@@ -25,18 +23,14 @@ SUPPORTED_EXTENSIONS = {
 }
 
 
-# ==========================================
 # Process Document
-# ==========================================
 
 def process_document(
     file,
     user_id
 ):
 
-    # ======================================
     # Get File Extension
-    # ======================================
 
     filename = file.filename or ""
 
@@ -45,9 +39,7 @@ def process_document(
     )[1].lower()
 
 
-    # ======================================
     # Validate File Type
-    # ======================================
 
     if extension not in SUPPORTED_EXTENSIONS:
 
@@ -56,9 +48,7 @@ def process_document(
         )
 
 
-    # ======================================
     # Create User Upload Directory
-    # ======================================
 
     upload_dir = os.path.join(
         "uploads",
@@ -71,9 +61,7 @@ def process_document(
     )
 
 
-    # ======================================
     # Save Uploaded File
-    # ======================================
 
     file_path = os.path.join(
         upload_dir,
@@ -90,10 +78,7 @@ def process_document(
             buffer
         )
 
-
-    # ======================================
     # Generate SHA-256 Hash
-    # ======================================
 
     with open(
         file_path,
@@ -105,9 +90,7 @@ def process_document(
         ).hexdigest()
 
 
-    # ======================================
     # Check Duplicate Document
-    # ======================================
 
     if document_exists(
         file_hash,
@@ -126,9 +109,7 @@ def process_document(
         }
 
 
-    # ======================================
     # Extract Text
-    # ======================================
 
     try:
 
@@ -147,9 +128,7 @@ def process_document(
         ) from error
 
 
-    # ======================================
     # Validate Extracted Text
-    # ======================================
 
     if not text.strip():
 
@@ -162,18 +141,37 @@ def process_document(
         )
 
 
-    # ======================================
     # Split Into Chunks
-    # ======================================
 
     chunks = chunk_text(text)
 
 
-    # ======================================
-    # Create Embeddings
-    # ======================================
+    # DEBUG: PRINT ALL CHUNKS
 
-    for i, chunk in enumerate(chunks):
+    print(
+        "\n========== DOCUMENT CHUNKS =========="
+    )
+
+    for i, chunk in enumerate(
+        chunks,
+        start=1
+    ):
+
+        print(
+            f"\n----- CHUNK {i} -----"
+        )
+
+        print(chunk)
+
+    print(
+        "\n=====================================\n"
+    )
+
+    # Create Embeddings
+
+    for i, chunk in enumerate(
+        chunks
+    ):
 
         embedding = create_embedding(
             chunk
@@ -188,10 +186,13 @@ def process_document(
             user_id=user_id
         )
 
+        print(
+            f"Stored chunk {i + 1} "
+            f"from {filename}"
+        )
 
-    # ======================================
+
     # Return Result
-    # ======================================
 
     return {
         "message": (

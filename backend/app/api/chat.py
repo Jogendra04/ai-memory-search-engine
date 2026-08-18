@@ -10,13 +10,9 @@ from app.services.chat_history import (
     clear_history
 )
 
-
 router = APIRouter()
 
-
-# ==========================================
 # Old Chat Test Endpoint
-# ==========================================
 
 @router.post("/chat")
 def chat(
@@ -28,9 +24,7 @@ def chat(
     }
 
 
-# ==========================================
 # Get Chat History
-# ==========================================
 
 @router.get("/chat/history")
 def get_chat_history(
@@ -49,9 +43,7 @@ def get_chat_history(
     }
 
 
-# ==========================================
 # Clear Chat History
-# ==========================================
 
 @router.delete("/chat/history")
 def delete_chat_history(

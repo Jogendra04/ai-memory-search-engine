@@ -1,12 +1,9 @@
-
 import csv
 
 from docx import Document
 
 
-# ==========================================
 # Extract Text From PDF
-# ==========================================
 
 def extract_text_from_pdf(file_path):
     from utils.pdf import extract_text_from_pdf as extract_pdf
@@ -14,9 +11,7 @@ def extract_text_from_pdf(file_path):
     return extract_pdf(file_path)
 
 
-# ==========================================
 # Extract Text From TXT
-# ==========================================
 
 def extract_text_from_txt(file_path):
 
@@ -30,9 +25,7 @@ def extract_text_from_txt(file_path):
         return file.read()
 
 
-# ==========================================
 # Extract Text From Markdown
-# ==========================================
 
 def extract_text_from_md(file_path):
 
@@ -46,9 +39,7 @@ def extract_text_from_md(file_path):
         return file.read()
 
 
-# ==========================================
 # Extract Text From DOCX
-# ==========================================
 
 def extract_text_from_docx(file_path):
 
@@ -66,9 +57,7 @@ def extract_text_from_docx(file_path):
     return "\n".join(paragraphs)
 
 
-# ==========================================
 # Extract Text From CSV
-# ==========================================
 
 def extract_text_from_csv(file_path):
 
@@ -97,9 +86,7 @@ def extract_text_from_csv(file_path):
     return "\n".join(rows)
 
 
-# ==========================================
 # General Document Extractor
-# ==========================================
 
 def extract_text(
     file_path,

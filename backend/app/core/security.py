@@ -6,16 +6,12 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 from dotenv import load_dotenv
 
-# ==========================
 # Load Environment Variables
-# ==========================
 
 load_dotenv()
 
 
-# ==========================
 # Password Hashing
-# ==========================
 
 pwd_context = CryptContext(
     schemes=["bcrypt"],
@@ -38,9 +34,7 @@ def verify_password(
     )
 
 
-# ==========================
 # JWT Configuration
-# ==========================
 
 SECRET_KEY = os.getenv("SECRET_KEY")
 
@@ -60,9 +54,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES = int(
 )
 
 
-# ==========================
 # Create Access Token
-# ==========================
 
 def create_access_token(data: dict):
 
@@ -89,9 +81,7 @@ def create_access_token(data: dict):
     return encoded_jwt
 
 
-# ==========================
 # Verify Access Token
-# ==========================
 
 def verify_access_token(token: str):
 

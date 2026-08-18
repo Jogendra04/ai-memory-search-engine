@@ -5,26 +5,16 @@ from app.services.chat_history import (
     get_history
 )
 
+def generate_answer( question, context, user_id, sources=None ):
 
-def generate_answer(
-    question,
-    context,
-    user_id,
-    sources=None
-):
-
-    # ==========================================
     # Get conversation history for this user
-    # ==========================================
 
     history = get_history(
         user_id=user_id,
         limit=6
     )
 
-    # ==========================================
     # System message
-    # ==========================================
 
     messages = [
         {
@@ -61,9 +51,7 @@ Context:
         }
     ]
 
-    # ==========================================
     # Add previous conversation
-    # ==========================================
 
     for message in history:
 
@@ -74,9 +62,7 @@ Context:
             }
         )
 
-    # ==========================================
     # Add current question
-    # ==========================================
 
     messages.append(
         {
@@ -85,9 +71,7 @@ Context:
         }
     )
 
-    # ==========================================
     # Generate answer using Llama
-    # ==========================================
 
     try:
 
@@ -115,9 +99,7 @@ Context:
             "the Llama model is available."
         )
 
-    # ==========================================
     # Save user's question
-    # ==========================================
 
     add_message(
         user_id=user_id,
@@ -126,9 +108,7 @@ Context:
         sources=[]
     )
 
-    # ==========================================
     # Save AI answer + sources
-    # ==========================================
 
     add_message(
         user_id=user_id,

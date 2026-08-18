@@ -5,14 +5,42 @@ def rerank_results(
 ):
     """
     Re-rank retrieved Qdrant results using
-    semantic similarity plus simple lexical
-    relevance signals.
-
-    Qdrant's score remains the primary signal.
+    semantic similarity plus keyword relevance.
     """
 
     question_words = set(
-        question.lower().split()
+        question.lower()
+        .replace("?", "")
+        .replace(",", "")
+        .split()
+    )
+
+    stop_words = {
+        "what",
+        "is",
+        "are",
+        "the",
+        "a",
+        "an",
+        "do",
+        "does",
+        "did",
+        "i",
+        "me",
+        "my",
+        "you",
+        "your",
+        "about",
+        "of",
+        "in",
+        "to",
+        "and",
+        "for",
+        "on"
+    }
+
+    question_keywords = (
+        question_words - stop_words
     )
 
     scored_results = []
@@ -21,15 +49,9 @@ def rerank_results(
 
         payload = result.payload or {}
 
-        # --------------------------------------
-        # Qdrant semantic score
-        # --------------------------------------
-
-        qdrant_score = result.score or 0.0
-
-        # --------------------------------------
-        # Build searchable source text
-        # --------------------------------------
+        qdrant_score = (
+            result.score or 0.0
+        )
 
         if payload.get("type") == "memory":
 
@@ -53,34 +75,35 @@ def rerank_results(
             )
 
         source_words = set(
-            source_text.lower().split()
+            source_text.lower()
+            .replace(",", " ")
+            .replace(".", " ")
+            .replace(":", " ")
+            .replace(";", " ")
+            .replace("-", " ")
+            .replace("/", " ")
+            .split()
         )
 
-        # --------------------------------------
-        # Keyword overlap
-        # --------------------------------------
+        if question_keywords:
 
-        if question_words:
+            matched_keywords = (
+                question_keywords
+                & source_words
+            )
 
-            overlap = (
-                len(
-                    question_words
-                    & source_words
-                )
-                / len(question_words)
+            keyword_overlap = (
+                len(matched_keywords)
+                / len(question_keywords)
             )
 
         else:
 
-            overlap = 0.0
-
-        # --------------------------------------
-        # Final score
-        # --------------------------------------
+            keyword_overlap = 0.0
 
         final_score = (
-            (qdrant_score * 0.80)
-            + (overlap * 0.20)
+            (qdrant_score * 0.75)
+            + (keyword_overlap * 0.25)
         )
 
         scored_results.append(
@@ -90,10 +113,6 @@ def rerank_results(
             )
         )
 
-    # --------------------------------------
-    # Sort by final score
-    # --------------------------------------
-
     scored_results.sort(
         key=lambda item: item[0],
         reverse=True
@@ -101,5 +120,6 @@ def rerank_results(
 
     return [
         result
-        for _, result in scored_results[:max_results]
+        for _, result
+        in scored_results[:max_results]
     ]

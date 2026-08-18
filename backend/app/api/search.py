@@ -22,9 +22,7 @@ from app.services.retrieval_service import rerank_results
 router = APIRouter()
 
 
-# ==========================================
 # Filter and diversify search results
-# ==========================================
 
 def filter_results(
     results,
@@ -47,9 +45,7 @@ def filter_results(
 
         payload = result.payload or {}
 
-        # --------------------------------------
         # Saved memories
-        # --------------------------------------
 
         if payload.get("type") == "memory":
 
@@ -57,9 +53,7 @@ def filter_results(
 
             continue
 
-        # --------------------------------------
         # Uploaded documents
-        # --------------------------------------
 
         filename = payload.get(
             "filename",
@@ -83,9 +77,7 @@ def filter_results(
     return filtered_results
 
 
-# ==========================================
 # Search
-# ==========================================
 
 @router.post("/search")
 def search(
@@ -95,9 +87,7 @@ def search(
     )
 ):
 
-    # ==========================================
     # Validate question
-    # ==========================================
 
     question = request.question.strip()
 
@@ -109,9 +99,7 @@ def search(
         )
 
 
-    # ==========================================
     # Build conversation-aware search query
-    # ==========================================
 
     try:
 
@@ -128,9 +116,7 @@ def search(
         )
 
 
-        # ==========================================
         # Create query embedding
-        # ==========================================
 
         start = time.perf_counter()
 
@@ -158,9 +144,7 @@ def search(
         ) from error
 
 
-    # ==========================================
     # Search Qdrant ONLY for this user
-    # ==========================================
 
     try:
 
@@ -189,9 +173,7 @@ def search(
         ) from error
 
 
-    # ==========================================
     # Diversify + Re-rank results
-    # ==========================================
 
     start = time.perf_counter()
 
@@ -212,9 +194,7 @@ def search(
     )
 
 
-    # ==========================================
     # Build context
-    # ==========================================
 
     context_parts = []
 
@@ -223,9 +203,7 @@ def search(
         payload = result.payload or {}
 
 
-        # --------------------------------------
         # Saved memory
-        # --------------------------------------
 
         if payload.get("type") == "memory":
 
@@ -260,9 +238,7 @@ Tags:
             )
 
 
-        # --------------------------------------
         # Uploaded document
-        # --------------------------------------
 
         else:
 
@@ -302,9 +278,7 @@ Content:
     )
 
 
-    # ==========================================
     # Build sources BEFORE generating answer
-    # ==========================================
 
     sources = []
 
@@ -335,9 +309,7 @@ Content:
             )
 
 
-        # --------------------------------------
         # Document source
-        # --------------------------------------
 
         else:
 
@@ -356,9 +328,7 @@ Content:
             )
 
 
-    # ==========================================
     # Generate answer using Llama
-    # ==========================================
 
     try:
 
@@ -391,9 +361,7 @@ Content:
         ) from error
 
 
-    # ==========================================
     # Return response
-    # ==========================================
 
     return {
         "question": question,

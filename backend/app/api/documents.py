@@ -14,13 +14,10 @@ from app.services.qdrant_service import (
     delete_document
 )
 
-
 router = APIRouter()
 
 
-# ==========================================
 # Get Uploaded Documents
-# ==========================================
 
 @router.get("/documents")
 def list_documents(
@@ -36,9 +33,7 @@ def list_documents(
     }
 
 
-# ==========================================
 # Delete Uploaded Document
-# ==========================================
 
 @router.delete("/documents/{filename}")
 def remove_document(
@@ -48,9 +43,7 @@ def remove_document(
     )
 ):
 
-    # ======================================
     # Delete Document Chunks From Qdrant
-    # ======================================
 
     deleted_chunks = delete_document(
         filename,
@@ -58,9 +51,7 @@ def remove_document(
     )
 
 
-    # ======================================
     # Delete Physical File
-    # ======================================
 
     file_path = os.path.join(
         "uploads",
@@ -73,9 +64,7 @@ def remove_document(
         os.remove(file_path)
 
 
-    # ======================================
     # Document Not Found
-    # ======================================
 
     if deleted_chunks == 0:
 
@@ -84,10 +73,7 @@ def remove_document(
             detail="Document not found."
         )
 
-
-    # ======================================
     # Success Response
-    # ======================================
 
     return {
         "message": (

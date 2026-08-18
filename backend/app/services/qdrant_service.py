@@ -14,16 +14,12 @@ from qdrant_client.models import (
 )
 
 
-# ==========================
 # Load Environment Variables
-# ==========================
 
 load_dotenv()
 
 
-# ==========================
 # Qdrant Configuration
-# ==========================
 
 QDRANT_URL = os.getenv("QDRANT_URL")
 
@@ -34,9 +30,7 @@ if QDRANT_URL is None:
     )
 
 
-# ==========================
 # Connect to Qdrant
-# ==========================
 
 client = QdrantClient(
     url=QDRANT_URL
@@ -45,9 +39,7 @@ client = QdrantClient(
 COLLECTION_NAME = "memory_documents"
 
 
-# ==========================
 # Custom Qdrant Error
-# ==========================
 
 class QdrantServiceError(Exception):
     """
@@ -57,9 +49,7 @@ class QdrantServiceError(Exception):
     pass
 
 
-# ==========================
 # Create Collection
-# ==========================
 
 def create_collection():
 
@@ -103,9 +93,7 @@ def create_collection():
         ) from error
 
 
-# ==========================
 # Scroll All Points
-# ==========================
 
 def scroll_all_points():
 
@@ -145,9 +133,7 @@ def scroll_all_points():
         ) from error
 
 
-# ==========================
 # Store Document Embedding
-# ==========================
 
 def store_embedding(
     text,
@@ -192,9 +178,7 @@ def store_embedding(
         ) from error
 
 
-# ==========================
 # Store Memory
-# ==========================
 
 def store_memory(
     title,
@@ -241,9 +225,7 @@ def store_memory(
         ) from error
 
 
-# ==========================
 # Update Memory
-# ==========================
 
 def update_memory(
     memory_id,
@@ -304,9 +286,7 @@ def update_memory(
     return True
 
 
-# ==========================
 # Search Embeddings
-# ==========================
 
 def search_embeddings(
     query_embedding,
@@ -345,9 +325,7 @@ def search_embeddings(
         ) from error
 
 
-# ==========================
 # Get All Memories/Documents
-# ==========================
 
 def get_all_memories(user_id):
 
@@ -379,9 +357,7 @@ def get_all_memories(user_id):
         ) from error
 
 
-# ==========================
 # Delete Memory
-# ==========================
 
 def delete_memory(
     memory_id,
@@ -430,9 +406,7 @@ def delete_memory(
         ) from error
 
 
-# ==========================
 # Get Uploaded Documents
-# ==========================
 
 def get_documents(user_id):
 
@@ -480,9 +454,7 @@ def get_documents(user_id):
         ) from error
 
 
-# ==========================
 # Delete Document
-# ==========================
 
 def delete_document(
     filename,
@@ -531,9 +503,7 @@ def delete_document(
         ) from error
 
 
-# ==========================
 # Check If Document Exists
-# ==========================
 
 def document_exists(
     file_hash,

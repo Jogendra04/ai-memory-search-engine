@@ -30,18 +30,14 @@ def chunk_text(
 
     while start < len(text):
 
-        # --------------------------------------
         # Initial chunk boundary
-        # --------------------------------------
 
         end = min(
             start + chunk_size,
             len(text)
         )
 
-        # --------------------------------------
         # Try to end at a natural boundary
-        # --------------------------------------
 
         if end < len(text):
 
@@ -67,25 +63,19 @@ def chunk_text(
 
                 end = boundary + 1
 
-        # --------------------------------------
         # Create chunk
-        # --------------------------------------
 
         chunk = text[start:end].strip()
 
         if chunk:
             chunks.append(chunk)
 
-        # --------------------------------------
         # Stop at the end
-        # --------------------------------------
 
         if end >= len(text):
             break
 
-        # --------------------------------------
         # Calculate overlapping start
-        # --------------------------------------
 
         start = max(
             end - overlap,

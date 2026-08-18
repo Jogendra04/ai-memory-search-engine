@@ -14,13 +14,10 @@ from app.services.document_service import (
     process_document
 )
 
-
 router = APIRouter()
 
 
-# ==========================================
 # Supported File Types
-# ==========================================
 
 SUPPORTED_CONTENT_TYPES = {
     "application/pdf",
@@ -31,9 +28,7 @@ SUPPORTED_CONTENT_TYPES = {
 }
 
 
-# ==========================================
 # Upload Document
-# ==========================================
 
 @router.post("/upload")
 def upload_file(
@@ -43,9 +38,7 @@ def upload_file(
     )
 ):
 
-    # ======================================
     # Validate File
-    # ======================================
 
     if not file.filename:
 
@@ -54,9 +47,7 @@ def upload_file(
             detail="Please select a file."
         )
 
-    # ======================================
     # Validate Content Type
-    # ======================================
 
     if (
         file.content_type
@@ -72,9 +63,7 @@ def upload_file(
             )
         )
 
-    # ======================================
     # Process Document
-    # ======================================
 
     try:
 
