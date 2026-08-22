@@ -18,22 +18,29 @@ from qdrant_client.models import (
 
 load_dotenv()
 
-
 # Qdrant Configuration
 
 QDRANT_URL = os.getenv("QDRANT_URL")
+QDRANT_API_KEY = os.getenv("QDRANT_API_KEY")
 
 if QDRANT_URL is None:
     raise RuntimeError(
         "QDRANT_URL is not configured. "
-        "Please add QDRANT_URL to your .env file."
+        "Please add QDRANT_URL to your environment variables."
+    )
+
+if QDRANT_API_KEY is None:
+    raise RuntimeError(
+        "QDRANT_API_KEY is not configured. "
+        "Please add QDRANT_API_KEY to your environment variables."
     )
 
 
 # Connect to Qdrant
 
 client = QdrantClient(
-    url=QDRANT_URL
+    url=QDRANT_URL,
+    api_key=QDRANT_API_KEY
 )
 
 COLLECTION_NAME = "memory_documents"

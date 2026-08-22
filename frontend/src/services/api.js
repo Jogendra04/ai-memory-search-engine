@@ -1,8 +1,6 @@
-const API_URL = "http://127.0.0.1:8000";
+const API_URL = "https://ai-memory-search-engine.onrender.com";
 
-// =====================================
 // Helper Functions
-// =====================================
 
 function getAuthHeaders() {
   const token = localStorage.getItem("access_token");
@@ -22,9 +20,7 @@ async function handleResponse(response) {
   return data;
 }
 
-// =====================================
 // CHAT
-// =====================================
 
 export async function search(question) {
   const response = await fetch(`${API_URL}/search`, {
@@ -66,9 +62,7 @@ export async function clearChatHistory() {
   return handleResponse(response);
 }
 
-// =====================================
 // DOCUMENTS
-// =====================================
 
 export async function uploadDocument(file) {
   const formData = new FormData();
@@ -110,9 +104,7 @@ export async function deleteDocument(filename) {
   return handleResponse(response);
 }
 
-// =====================================
 // MEMORIES
-// =====================================
 
 export async function getMemories() {
   const response = await fetch(`${API_URL}/memories`, {

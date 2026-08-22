@@ -1,5 +1,5 @@
 import json
-from datetime import datetime, date
+from datetime import datetime, date, timezone
 
 from app.database.database import SessionLocal
 from app.models.chat_message import ChatMessage
@@ -13,24 +13,20 @@ def add_message(
     content,
     sources=None
 ):
-
     db = SessionLocal()
 
     try:
-
         message = ChatMessage(
             user_id=user_id,
             role=role,
             content=content,
-            sources=json.dumps(
-                sources or []
-            ),
-            created_at=datetime.utcnow()
+            sources=json.dumps(sources or []),
+            created_at=datetime.now(timezone.utc)
         )
 
         db.add(message)
-
         db.commit()
+        db.refresh(message)
 
         print(
             f"Saved chat message: "
@@ -38,8 +34,13 @@ def add_message(
             f"role={role}"
         )
 
-    finally:
+        return message
 
+    except Exception:
+        db.rollback()
+        raise
+
+    finally:
         db.close()
 
 
@@ -49,22 +50,24 @@ def get_history(
     user_id,
     limit=50
 ):
-
     db = SessionLocal()
 
     try:
+        # Make sure limit is valid
+        if limit <= 0:
+            limit = 50
 
         today = date.today()
 
         start_of_day = datetime.combine(
             today,
             datetime.min.time()
-        )
+        ).replace(tzinfo=timezone.utc)
 
         end_of_day = datetime.combine(
             today,
             datetime.max.time()
-        )
+        ).replace(tzinfo=timezone.utc)
 
         messages = (
             db.query(ChatMessage)
@@ -85,17 +88,13 @@ def get_history(
         for message in messages:
 
             try:
-
                 sources = (
-                    json.loads(
-                        message.sources
-                    )
+                    json.loads(message.sources)
                     if message.sources
                     else []
                 )
 
-            except json.JSONDecodeError:
-
+            except (json.JSONDecodeError, TypeError):
                 sources = []
 
             history.append(
@@ -115,7 +114,6 @@ def get_history(
         return history
 
     finally:
-
         db.close()
 
 
@@ -131,17 +129,29 @@ def clear_history(user_id):
 
     try:
 
-        db.query(ChatMessage).filter(
-            ChatMessage.user_id == user_id
-        ).delete()
+        deleted_count = (
+            db.query(ChatMessage)
+            .filter(
+                ChatMessage.user_id == user_id
+            )
+            .delete(
+                synchronize_session=False
+            )
+        )
 
         db.commit()
 
         print(
             f"Cleared chat history: "
-            f"user_id={user_id}"
+            f"user_id={user_id}, "
+            f"messages={deleted_count}"
         )
 
-    finally:
+        return deleted_count
 
+    except Exception:
+        db.rollback()
+        raise
+
+    finally:
         db.close()
