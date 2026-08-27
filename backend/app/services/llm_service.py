@@ -1,11 +1,15 @@
-from ollama import chat
+from google import genai
 
 from app.services.chat_history import (
     add_message,
     get_history
 )
 
-def generate_answer( question, context, user_id, sources=None ):
+
+client = genai.Client()
+
+
+def generate_answer(question, context, user_id, sources=None):
 
     # Get conversation history for this user
 
@@ -14,12 +18,9 @@ def generate_answer( question, context, user_id, sources=None ):
         limit=6
     )
 
-    # System message
+    # System prompt
 
-    messages = [
-        {
-            "role": "system",
-            "content": f"""
+    system_prompt = f"""
 You are a helpful AI assistant for a user's personal knowledge system.
 
 Use the provided context and recent conversation history to answer the user's question.
@@ -48,55 +49,55 @@ Keep the answer concise and directly answer the question.
 Context:
 {context}
 """
-        }
+
+    # Build conversation for Gemini
+
+    conversation = [
+        system_prompt
     ]
 
     # Add previous conversation
 
     for message in history:
 
-        messages.append(
-            {
-                "role": message["role"],
-                "content": message["content"]
-            }
+        conversation.append(
+            f"{message['role']}: {message['content']}"
         )
 
     # Add current question
 
-    messages.append(
-        {
-            "role": "user",
-            "content": question
-        }
+    conversation.append(
+        f"user: {question}"
     )
 
-    # Generate answer using Llama
+    # Combine into one prompt
+
+    prompt = "\n\n".join(conversation)
+
+    # Generate answer using Gemini
 
     try:
 
-        response = chat(
-    model="llama3.2",
-    messages=messages,
-    options={
-        "temperature": 0,
-        "num_predict": 150
-    },
-    keep_alive="30m"
-)
+        response = client.models.generate_content(
+            model="gemini-3.7-flash",
+            contents=prompt,
+            config={
+                "temperature": 0,
+                "max_output_tokens": 150
+            }
+        )
 
-        answer = response["message"]["content"].strip()
+        answer = response.text.strip()
 
     except Exception as error:
 
         print(
-            f"Ollama error: {error}"
+            f"Gemini error: {error}"
         )
 
         return (
             "The AI service is currently unavailable. "
-            "Please make sure Ollama is running and "
-            "the Llama model is available."
+            "Please try again later."
         )
 
     # Save user's question

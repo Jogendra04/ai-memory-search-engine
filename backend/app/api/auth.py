@@ -83,7 +83,7 @@ def login(
 
     if not verify_password(
         request.password,
-        user.password
+        str(user.password)
     ):
 
         raise HTTPException(
