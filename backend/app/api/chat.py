@@ -10,17 +10,50 @@ from app.services.chat_history import (
     clear_history
 )
 
+from app.services.llm_service import generate_answer
+from app.services.memory_service import search_memories
+
+
 router = APIRouter()
 
-# Old Chat Test Endpoint
+
+# Chat with AI
 
 @router.post("/chat")
 def chat(
-    request: ChatRequest
+    request: ChatRequest,
+    current_user: User = Depends(get_current_user)
 ):
 
+    # Search relevant memories/documents
+    results = search_memories(
+        query=request.question,
+        user_id=current_user.id
+    )
+
+    # Build context from retrieved memories
+    context_parts = []
+
+    for result in results:
+
+        content = result.get("content")
+
+        if content:
+            context_parts.append(content)
+
+    context = "\n\n".join(context_parts)
+
+    # Generate answer using Gemini
+    answer = generate_answer(
+        question=request.question,
+        context=context,
+        user_id=current_user.id,
+        sources=results
+    )
+
     return {
-        "answer": f"You asked: {request.question}"
+        "answer": answer,
+        "sources": results
     }
 
 

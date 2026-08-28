@@ -1,3 +1,6 @@
+import os
+
+from dotenv import load_dotenv
 from google import genai
 
 from app.services.chat_history import (
@@ -6,20 +9,25 @@ from app.services.chat_history import (
 )
 
 
-client = genai.Client()
+# Load environment variables from .env
+load_dotenv()
+
+
+# Initialize Gemini client
+client = genai.Client(
+    api_key=os.getenv("GEMINI_API_KEY")
+)
 
 
 def generate_answer(question, context, user_id, sources=None):
 
     # Get conversation history for this user
-
     history = get_history(
         user_id=user_id,
         limit=6
     )
 
     # System prompt
-
     system_prompt = f"""
 You are a helpful AI assistant for a user's personal knowledge system.
 
@@ -51,13 +59,11 @@ Context:
 """
 
     # Build conversation for Gemini
-
     conversation = [
         system_prompt
     ]
 
     # Add previous conversation
-
     for message in history:
 
         conversation.append(
@@ -65,27 +71,24 @@ Context:
         )
 
     # Add current question
-
     conversation.append(
         f"user: {question}"
     )
 
-    # Combine into one prompt
-
+    # Combine conversation into one prompt
     prompt = "\n\n".join(conversation)
 
     # Generate answer using Gemini
-
     try:
 
         response = client.models.generate_content(
-            model="gemini-3.7-flash",
-            contents=prompt,
-            config={
-                "temperature": 0,
-                "max_output_tokens": 150
-            }
-        )
+    model="gemini-3.6-flash",
+    contents=prompt,
+    config={
+        "temperature": 0,
+        "max_output_tokens": 150
+    }
+)
 
         answer = response.text.strip()
 
@@ -101,7 +104,6 @@ Context:
         )
 
     # Save user's question
-
     add_message(
         user_id=user_id,
         role="user",
@@ -110,7 +112,6 @@ Context:
     )
 
     # Save AI answer + sources
-
     add_message(
         user_id=user_id,
         role="assistant",
