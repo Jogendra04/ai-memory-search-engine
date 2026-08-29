@@ -11,6 +11,7 @@ from qdrant_client.models import (
     Filter,
     FieldCondition,
     MatchValue,
+    PayloadSchemaType,
 )
 
 
@@ -26,6 +27,9 @@ if not QDRANT_URL:
 
 if not QDRANT_API_KEY:
     raise RuntimeError("QDRANT_API_KEY is not configured.")
+
+
+# Qdrant Client
 
 client = QdrantClient(
     url=QDRANT_URL,
@@ -45,7 +49,7 @@ class QdrantServiceError(Exception):
     pass
 
 
-# Create Collection
+# Create Collection and Payload Index
 
 def create_collection():
 
@@ -57,6 +61,8 @@ def create_collection():
             collection.name
             for collection in collections.collections
         ]
+
+        # Create collection if it does not exist
 
         if COLLECTION_NAME not in existing_collections:
 
@@ -77,6 +83,43 @@ def create_collection():
             print(
                 f"Collection '{COLLECTION_NAME}' already exists."
             )
+
+        # Create user_id payload index
+
+        try:
+
+            client.create_payload_index(
+                collection_name=COLLECTION_NAME,
+                field_name="user_id",
+                field_schema=PayloadSchemaType.KEYWORD
+            )
+
+            print(
+                "Payload index for 'user_id' created or already exists."
+            )
+
+        except Exception as error:
+
+            # Qdrant may return an error if the index
+            # already exists. We don't want this to
+            # stop the application.
+
+            error_message = str(error).lower()
+
+            if (
+                "already exists" in error_message
+                or "duplicate" in error_message
+            ):
+
+                print(
+                    "Payload index for 'user_id' already exists."
+                )
+
+            else:
+
+                print(
+                    f"Payload index warning: {error}"
+                )
 
     except Exception as error:
 
@@ -149,6 +192,7 @@ def store_embedding(
                     id=str(uuid.uuid4()),
                     vector=embedding,
                     payload={
+                        "type": "document",
                         "user_id": user_id,
                         "filename": filename,
                         "text": text,
@@ -235,51 +279,63 @@ def update_memory(
     if tags is None:
         tags = []
 
-    # Get the existing memory
+    try:
 
-    results = client.retrieve(
-        collection_name=COLLECTION_NAME,
-        ids=[memory_id],
-        with_payload=True,
-        with_vectors=False
-    )
+        # Get the existing memory
 
-    # Memory does not exist
+        results = client.retrieve(
+            collection_name=COLLECTION_NAME,
+            ids=[memory_id],
+            with_payload=True,
+            with_vectors=False
+        )
 
-    if not results:
-        return False
+        # Memory does not exist
 
-    existing_payload = results[0].payload or {}
+        if not results:
+            return False
 
-    # Make sure the memory belongs to this user
+        existing_payload = results[0].payload or {}
 
-    if existing_payload.get("user_id") != user_id:
-        return False
+        # Make sure the memory belongs to this user
 
-    # Update the existing Qdrant point
+        if existing_payload.get("user_id") != user_id:
+            return False
 
-    client.upsert(
-        collection_name=COLLECTION_NAME,
-        points=[
-            PointStruct(
-                id=memory_id,
-                vector=embedding,
-                payload={
-                    "type": "memory",
-                    "user_id": user_id,
-                    "title": title,
-                    "content": content,
-                    "tags": tags
-                }
-            )
-        ]
-    )
+        # Update existing Qdrant point
 
-    print(
-        f"Updated memory: {memory_id}"
-    )
+        client.upsert(
+            collection_name=COLLECTION_NAME,
+            points=[
+                PointStruct(
+                    id=memory_id,
+                    vector=embedding,
+                    payload={
+                        "type": "memory",
+                        "user_id": user_id,
+                        "title": title,
+                        "content": content,
+                        "tags": tags
+                    }
+                )
+            ]
+        )
 
-    return True
+        print(
+            f"Updated memory: {memory_id}"
+        )
+
+        return True
+
+    except Exception as error:
+
+        print(
+            f"Qdrant memory update error: {error}"
+        )
+
+        raise QdrantServiceError(
+            "Unable to update the memory."
+        ) from error
 
 
 # Search Embeddings
@@ -362,8 +418,7 @@ def delete_memory(
 
     try:
 
-        # Make sure the memory belongs
-        # to the current user.
+        # Get memory
 
         results = client.retrieve(
             collection_name=COLLECTION_NAME,
@@ -377,8 +432,12 @@ def delete_memory(
 
         payload = results[0].payload or {}
 
+        # Make sure memory belongs to current user
+
         if payload.get("user_id") != user_id:
             return False
+
+        # Delete memory
 
         client.delete(
             collection_name=COLLECTION_NAME,

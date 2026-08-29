@@ -4,8 +4,12 @@ from app.services.qdrant_service import (
     store_memory,
     get_all_memories,
     delete_memory,
-    update_memory
+    update_memory,
+    search_embeddings
 )
+
+
+# Save Memory
 
 def save_memory(
     title,
@@ -42,6 +46,8 @@ def save_memory(
     }
 
 
+# List Memories
+
 def list_memories(user_id):
 
     memories = get_all_memories(
@@ -75,6 +81,8 @@ def list_memories(user_id):
     return results
 
 
+# Remove Memory
+
 def remove_memory(
     memory_id,
     user_id
@@ -86,6 +94,7 @@ def remove_memory(
     )
 
     if not deleted:
+
         return {
             "message": "Memory not found.",
             "id": memory_id
@@ -96,6 +105,8 @@ def remove_memory(
         "id": memory_id
     }
 
+
+# Edit Memory
 
 def edit_memory(
     memory_id,
@@ -140,3 +151,57 @@ def edit_memory(
         "content": content,
         "tags": tags
     }
+
+
+# Search Memories
+
+def search_memories(
+    question,
+    user_id,
+    limit=5
+):
+
+    # Create embedding for the user's question
+    query_embedding = create_embedding(
+        question
+    )
+
+    # Search Qdrant using semantic similarity
+    memories = search_embeddings(
+        query_embedding=query_embedding,
+        user_id=user_id,
+        limit=limit
+    )
+
+    results = []
+
+    for memory in memories:
+
+        payload = memory.payload or {}
+
+        results.append(
+            {
+                "id": str(memory.id),
+                "type": payload.get(
+                    "type"
+                ),
+                "title": payload.get(
+                    "title"
+                ),
+                "content": payload.get(
+                    "content"
+                ),
+                "filename": payload.get(
+                    "filename"
+                ),
+                "text": payload.get(
+                    "text"
+                ),
+                "chunk_number": payload.get(
+                    "chunk_number"
+                ),
+                "score": memory.score
+            }
+        )
+
+    return results
