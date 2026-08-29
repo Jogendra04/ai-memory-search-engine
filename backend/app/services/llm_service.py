@@ -1,4 +1,5 @@
 import os
+import time
 
 from dotenv import load_dotenv
 from google import genai
@@ -38,6 +39,7 @@ def generate_answer(
         user_id=user_id,
         limit=6
     )
+
 
     # Build conversation history
     history_text = ""
@@ -117,9 +119,7 @@ IMPORTANT RULES:
    "it", "that", "this", "they", "which one",
    "what was its", "tell me more", and "what about".
 
-9. The retrieved context may contain information
-   from different sources. Only use information
-   relevant to the current user.
+9. Only use information relevant to the current user.
 
 10. If the answer cannot be found in the retrieved
     context or conversation history, respond exactly:
@@ -169,38 +169,64 @@ Provide the complete answer to the current question.
 
 
     # Generate answer using Gemini
-    try:
+    answer = None
 
-        response = client.models.generate_content(
-            model="gemini-3.6-flash",
-            contents=prompt,
-            config={
-                "temperature": 0,
-                "max_output_tokens": 250
-            }
-        )
+    max_retries = 3
 
-        if not response or not response.text:
+    for attempt in range(max_retries):
+
+        try:
+
+            response = client.models.generate_content(
+                model="gemini-3.6-flash",
+                contents=prompt,
+                config={
+                    "temperature": 0,
+                    "max_output_tokens": 250
+                }
+            )
+
+            if response and response.text:
+
+                answer = response.text.strip()
+
+                break
 
             answer = (
                 "I couldn't generate an answer "
                 "from the available information."
             )
 
-        else:
-
-            answer = response.text.strip()
+            break
 
 
-    except Exception as error:
+        except Exception as error:
 
-        print(
-            f"Gemini error: {error}"
-        )
+            print(
+                f"Gemini error "
+                f"(attempt {attempt + 1}/{max_retries}): "
+                f"{error}"
+            )
+
+            # Retry only before the final attempt
+            if attempt < max_retries - 1:
+
+                wait_time = 2 ** attempt
+
+                print(
+                    f"Retrying Gemini request "
+                    f"in {wait_time} seconds..."
+                )
+
+                time.sleep(wait_time)
+
+
+    # All attempts failed
+    if answer is None:
 
         answer = (
-            "The AI service is currently unavailable. "
-            "Please try again later."
+            "The AI service is temporarily unavailable. "
+            "Please try again shortly."
         )
 
 
