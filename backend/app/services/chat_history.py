@@ -89,8 +89,8 @@ def get_history(
 
             try:
                 sources = (
-                    json.loads(message.sources)
-                    if message.sources
+                    json.loads(str(message.sources))
+                    if message.sources is not None
                     else []
                 )
 

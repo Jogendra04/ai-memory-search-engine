@@ -31,7 +31,7 @@ def chat(
     # Search user's memories and documents
 
     memories = search_memories(
-        query=request.question,
+        question=request.question,
         user_id=current_user.id,
         limit=5
     )

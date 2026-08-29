@@ -82,13 +82,13 @@ Context:
     try:
 
         response = client.models.generate_content(
-    model="gemini-3.6-flash",
-    contents=prompt,
-    config={
-        "temperature": 0,
-        "max_output_tokens": 150
-    }
-)
+            model="gemini-3.6-flash",
+            contents=prompt,
+            config={
+                "temperature": 0,
+                "max_output_tokens": 150
+            }
+        )
 
         answer = response.text.strip()
 
