@@ -35,28 +35,27 @@ function Login() {
 
       if (!response.ok) {
         setError(
-          data.detail ||
-            "Invalid email or password."
+          data.detail || "Invalid email or password."
         );
         return;
       }
 
       localStorage.setItem(
-  "access_token",
-  data.access_token
-);
+        "access_token",
+        data.access_token
+      );
 
-localStorage.setItem(
-  "user_name",
-  data.name
-);
+      localStorage.setItem(
+        "user_name",
+        data.name
+      );
 
-localStorage.setItem(
-  "user_email",
-  data.email
-);
+      localStorage.setItem(
+        "user_email",
+        data.email
+      );
 
-navigate("/dashboard");
+      navigate("/dashboard");
     } catch (error) {
       console.error(error);
 
@@ -70,36 +69,34 @@ navigate("/dashboard");
 
   return (
     <div className="auth-page">
-
       <div className="auth-card">
 
         {/* Brand */}
 
         <div className="auth-brand">
-
           <div className="auth-logo">
             AI
           </div>
 
           <div>
             <h1>AI Memory Search</h1>
-            <span>Your personal knowledge system</span>
-          </div>
 
+            <span>
+              Your personal knowledge system
+            </span>
+          </div>
         </div>
 
 
         {/* Heading */}
 
         <div className="auth-heading">
-
           <h2>Welcome back</h2>
 
           <p>
             Sign in to access your memories,
             documents, and AI assistant.
           </p>
-
         </div>
 
 
@@ -122,7 +119,6 @@ navigate("/dashboard");
           {/* Email */}
 
           <div className="form-group">
-
             <label htmlFor="email">
               Email address
             </label>
@@ -138,7 +134,6 @@ navigate("/dashboard");
               required
               autoComplete="email"
             />
-
           </div>
 
 
@@ -146,13 +141,9 @@ navigate("/dashboard");
 
           <div className="form-group">
 
-            <div className="password-label-row">
-
-              <label htmlFor="password">
-                Password
-              </label>
-
-            </div>
+            <label htmlFor="password">
+              Password
+            </label>
 
             <div className="password-input-wrapper">
 
@@ -188,6 +179,15 @@ navigate("/dashboard");
 
             </div>
 
+
+            {/* Forgot Password */}
+
+            <div className="forgot-password-link">
+              <Link to="/forgot-password">
+                Forgot password?
+              </Link>
+            </div>
+
           </div>
 
 
@@ -209,7 +209,6 @@ navigate("/dashboard");
         {/* Register */}
 
         <div className="auth-footer">
-
           <span>
             Don't have an account?
           </span>
@@ -217,9 +216,10 @@ navigate("/dashboard");
           <Link to="/register">
             Create an account
           </Link>
-
         </div>
 
+
+        {/* Bottom Text */}
 
         <p className="auth-bottom-text">
           Secure access to your personal AI
@@ -227,7 +227,6 @@ navigate("/dashboard");
         </p>
 
       </div>
-
     </div>
   );
 }
