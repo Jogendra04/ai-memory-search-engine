@@ -99,43 +99,74 @@ IMPORTANT RULES:
 1. Use the retrieved context as the primary source
    for your answer.
 
-2. Answer the user's question directly.
+2. Always answer the user's question directly.
 
-3. If the answer is explicitly present in a saved
+3. When the requested information is present in
+   the retrieved context, extract it and provide
+   the actual information.
+
+4. Never stop after an introductory phrase.
+
+   For example, do NOT answer:
+
+   "Based on your resume, your technical skills include"
+
+   Instead, continue and provide the actual skills.
+
+5. If the question asks for a list, provide the
+   complete relevant list from the retrieved context.
+
+6. If the question asks for a name, title, company,
+   technology, date, achievement, or other specific
+   piece of information, provide the actual value.
+
+7. If the answer is explicitly present in a saved
    memory, use that information.
 
-4. If the answer is present in an uploaded document,
+8. If the answer is present in an uploaded document,
    use the relevant document information.
 
-5. You may combine information from multiple
+9. You may combine information from multiple
    retrieved sources when necessary.
 
-6. Do not invent facts that are not supported by
-   the retrieved context or conversation history.
+10. Do not invent facts that are not supported by
+    the retrieved context or conversation history.
 
-7. Do not assume information that is not provided.
+11. Do not assume information that is not provided.
 
-8. For follow-up questions, use the conversation
-   history to understand references such as:
-   "it", "that", "this", "they", "which one",
-   "what was its", "tell me more", and "what about".
+12. For follow-up questions, use the conversation
+    history to understand references such as:
+    "it", "that", "this", "they", "which one",
+    "what was its", "tell me more", and "what about".
 
-9. Only use information relevant to the current user.
+13. Only use information relevant to the current user.
 
-10. If the answer cannot be found in the retrieved
+14. If the answer cannot be found in the retrieved
     context or conversation history, respond exactly:
 
 "I couldn't find that information in your documents or memories."
 
-11. Do not mention the retrieval process unless
+15. Do not mention the retrieval process unless
     the user asks about it.
 
-12. Keep the answer concise but complete.
+16. Keep the answer concise but complete.
 
-13. Never return an incomplete sentence.
+17. Never return an incomplete sentence.
 
-14. Always provide the actual answer when the
+18. Never end the answer with a colon when more
+    information is required.
+
+19. Always provide the actual answer when the
     retrieved context contains the information.
+
+20. Do not say "Based on your resume..." and then
+    stop. Always provide the information after it.
+
+21. Do not describe what you are going to answer.
+    Simply answer the question.
+
+22. Before finishing, verify that your response
+    actually answers the user's question.
 """
 
 
@@ -165,7 +196,17 @@ CURRENT QUESTION
 ANSWER
 ====================
 
-Provide the complete answer to the current question.
+Answer the current question using the retrieved
+context.
+
+If the requested information exists in the context,
+extract and provide the actual information.
+
+Do not provide only an introduction.
+Do not stop after a colon.
+Do not leave the answer incomplete.
+
+Return only the final answer.
 """
 
 
@@ -189,7 +230,7 @@ Provide the complete answer to the current question.
                 contents=prompt,
                 config={
                     "temperature": 0,
-                    "max_output_tokens": 250
+                    "max_output_tokens": 400
                 }
             )
 
@@ -240,7 +281,7 @@ Provide the complete answer to the current question.
 
 
             # If the error is not temporary,
-            # don't waste time retrying it.
+            # don't retry it.
             if not is_temporary_error:
 
                 print(
