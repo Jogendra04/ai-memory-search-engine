@@ -22,6 +22,7 @@ if not GEMINI_API_KEY:
         "GEMINI_API_KEY is not configured."
     )
 
+
 client = genai.Client(
     api_key=GEMINI_API_KEY
 )
@@ -171,11 +172,17 @@ Provide the complete answer to the current question.
     # Generate answer using Gemini
     answer = None
 
-    max_retries = 3
+    # Number of Gemini attempts
+    max_retries = 4
 
     for attempt in range(max_retries):
 
         try:
+
+            print(
+                f"Sending request to Gemini "
+                f"(attempt {attempt + 1}/{max_retries})..."
+            )
 
             response = client.models.generate_content(
                 model="gemini-3.6-flash",
@@ -190,6 +197,11 @@ Provide the complete answer to the current question.
 
                 answer = response.text.strip()
 
+                print(
+                    f"Gemini request succeeded "
+                    f"on attempt {attempt + 1}/{max_retries}"
+                )
+
                 break
 
             answer = (
@@ -197,10 +209,16 @@ Provide the complete answer to the current question.
                 "from the available information."
             )
 
+            print(
+                "Gemini returned an empty response."
+            )
+
             break
 
 
         except Exception as error:
+
+            error_text = str(error)
 
             print(
                 f"Gemini error "
@@ -208,17 +226,55 @@ Provide the complete answer to the current question.
                 f"{error}"
             )
 
-            # Retry only before the final attempt
-            if attempt < max_retries - 1:
 
-                wait_time = 2 ** attempt
+            # Detect temporary Gemini server errors
+            is_temporary_error = (
+                "500" in error_text
+                or "503" in error_text
+                or "INTERNAL" in error_text
+                or "UNAVAILABLE" in error_text
+                or "high demand" in error_text
+                or "overloaded" in error_text
+                or "temporarily unavailable" in error_text
+            )
+
+
+            # If the error is not temporary,
+            # don't waste time retrying it.
+            if not is_temporary_error:
 
                 print(
-                    f"Retrying Gemini request "
-                    f"in {wait_time} seconds..."
+                    "Non-temporary Gemini error. "
+                    "Stopping retries."
                 )
 
-                time.sleep(wait_time)
+                break
+
+
+            # Final attempt failed
+            if attempt == max_retries - 1:
+
+                print(
+                    "Gemini remained unavailable "
+                    "after all retry attempts."
+                )
+
+                break
+
+
+            # Exponential backoff:
+            #
+            # Attempt 1 -> wait 2 seconds
+            # Attempt 2 -> wait 4 seconds
+            # Attempt 3 -> wait 8 seconds
+            wait_time = 2 ** (attempt + 1)
+
+            print(
+                f"Retrying Gemini request "
+                f"in {wait_time} seconds..."
+            )
+
+            time.sleep(wait_time)
 
 
     # All attempts failed
