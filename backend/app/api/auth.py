@@ -176,8 +176,10 @@ def forgot_password(
         f"?token={reset_token}"
     )
 
+    recipient_email = str(user.email)
+
     send_password_reset_email(
-        recipient_email=user.email,
+        recipient_email=recipient_email,
         reset_link=reset_link
     )
 
@@ -211,13 +213,19 @@ def reset_password(
     # Make both datetimes timezone-aware for comparison
     expires_at = reset_record.expires_at
 
+    if not isinstance(expires_at, datetime):
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid or expired reset link."
+        )
+
     if expires_at.tzinfo is None:
         expires_at = expires_at.replace(
             tzinfo=timezone.utc
         )
 
     if datetime.now(timezone.utc) > expires_at:
-        reset_record.used = "true"
+        setattr(reset_record, "used", "true")
         db.commit()
 
         raise HTTPException(
@@ -238,12 +246,13 @@ def reset_password(
         )
 
     # Hash the new password
-    user.password = app.core.security.hash_password(
+    hashed_password = app.core.security.hash_password(
         request.new_password
     )
+    setattr(user, "password", hashed_password)
 
     # Invalidate the reset token
-    reset_record.used = "true"
+    setattr(reset_record, "used", "true")
 
     db.commit()
 
