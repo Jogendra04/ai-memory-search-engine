@@ -35,14 +35,21 @@ def generate_answer(
     sources=None
 ):
 
+    # --------------------------------------------------
     # Get recent conversation history
+    # --------------------------------------------------
+
     history = get_history(
         user_id=user_id,
         limit=6
     )
 
 
+    # --------------------------------------------------
     # Build conversation history
+    # Ignore incomplete previous assistant answers
+    # --------------------------------------------------
+
     history_text = ""
 
     if history:
@@ -59,15 +66,38 @@ def generate_answer(
             content = message.get(
                 "content",
                 ""
-            )
+            ).strip()
+
+            if not content:
+                continue
+
+            # Skip incomplete assistant responses
+            if role == "assistant":
+
+                incomplete_response = (
+                    len(content) < 40
+                    or content.endswith(":")
+                    or content.endswith("-")
+                    or content.endswith("**")
+                    or content.endswith(",")
+                )
+
+                if incomplete_response:
+                    continue
 
             history_parts.append(
                 f"{role}: {content}"
             )
 
-        history_text = "\n".join(
-            history_parts
-        )
+        if history_parts:
+            history_text = "\n".join(
+                history_parts
+            )
+
+        else:
+            history_text = (
+                "No previous conversation."
+            )
 
     else:
 
@@ -76,8 +106,11 @@ def generate_answer(
         )
 
 
+    # --------------------------------------------------
     # Make sure context is not empty
-    if not context.strip():
+    # --------------------------------------------------
+
+    if not context or not context.strip():
 
         context = (
             "No relevant documents or "
@@ -85,101 +118,84 @@ def generate_answer(
         )
 
 
+    # --------------------------------------------------
     # System instructions
+    # --------------------------------------------------
+
     system_prompt = """
-You are an AI assistant for a user's personal
-knowledge system.
+You are an AI assistant for a user's personal knowledge system.
 
-Your task is to answer the user's question using
-the retrieved documents, saved memories, and recent
-conversation history.
+Your task is to answer the user's question using the retrieved
+documents, saved memories, and recent conversation history.
 
-IMPORTANT ANSWERING RULES:
+IMPORTANT RULES:
 
-1. Always answer the user's question directly.
+1. Answer the current question directly.
 
-2. Use the retrieved context as the primary source
-   of information.
+2. Use the retrieved context as the primary source of information.
 
-3. When the requested information exists in the
-   retrieved context, extract the actual information
-   and include it in the answer.
+3. Extract actual information from the context.
 
-4. Never stop after an introductory sentence.
+4. Do not merely describe what the context contains.
 
-5. Never end an answer with a colon if more information
-   is required.
+5. If the user asks for a list, provide all relevant items found
+   in the retrieved context.
 
-6. If the user asks for skills, provide the actual
-   skills as a complete list.
+6. If the user asks about skills, provide the actual skills as a
+   complete list.
 
-7. If the user asks for a publication name, provide
-   the actual publication title.
+7. If the user asks about projects, provide the actual project
+   names and relevant details found in the context.
 
-8. If the user asks for a name, title, company,
-   technology, date, achievement, or other specific
-   information, provide the actual value.
+8. If the user asks for a publication name, provide the actual
+   publication title found in the context.
 
-9. If the question asks for a list, provide all relevant
-   items available in the retrieved context.
+9. If the user asks for a name, title, company, technology, date,
+   achievement, or other specific information, provide the actual
+   value from the context.
 
-10. Do not merely describe what the context contains.
-    Extract and answer with the information itself.
+10. Never invent facts.
 
-11. Do not invent facts.
+11. Never assume information that is not provided.
 
-12. Do not assume information that is not provided.
+12. You may combine information from multiple retrieved sources.
 
-13. You may combine information from multiple retrieved
-    sources when necessary.
+13. Use recent conversation history only when it helps answer the
+    current question.
 
-14. Use recent conversation history for follow-up
-    questions and references such as "it", "that",
-    "this", "they", "which one", "tell me more",
-    and "what about".
+14. Ignore incomplete previous assistant responses.
 
 15. Only use information relevant to the current user.
 
-16. If the answer cannot be found in the retrieved
-    context or conversation history, respond exactly:
+16. If the answer cannot be found in the retrieved context or
+    conversation history, respond exactly:
 
 "I couldn't find that information in your documents or memories."
 
-17. Do not mention the retrieval process unless
-    the user asks about it.
+17. Do not mention retrieval, embeddings, Qdrant, prompts, or
+    internal processing unless the user asks.
 
 18. Keep answers concise but complete.
 
-19. Never return an incomplete sentence.
+19. Never stop after an introductory sentence.
 
-20. Never return an incomplete list.
+20. Never end with a colon.
 
-21. Before finishing, verify that the response directly
-    answers the user's question.
+21. Never return an incomplete sentence.
 
-22. Return only the final answer.
+22. Never return an incomplete list.
 
-Examples:
+23. Before finishing, verify that the answer directly answers the
+    user's question.
 
-Bad answer:
-"Based on your resume, your technical skills include:"
-
-Good answer:
-"Your technical skills include Python, JavaScript, SQL,
-FastAPI, Flask, React.js, PostgreSQL, Qdrant, PyTorch,
-TensorFlow, LangChain, Docker, AWS, and related AI/ML
-technologies."
-
-Bad answer:
-"The name of your publication is:"
-
-Good answer:
-"The name of your research publication is [actual title
-from the retrieved context]."
+24. Return only the final answer.
 """
 
 
+    # --------------------------------------------------
     # Build final prompt
+    # --------------------------------------------------
+
     prompt = f"""
 {system_prompt}
 
@@ -205,11 +221,11 @@ CURRENT QUESTION
 FINAL ANSWER
 ====================
 
-Answer the current question directly using the retrieved
-context.
+Answer the current question directly.
 
-If the requested information exists in the context,
-extract and provide the actual information.
+Use the retrieved context to provide the actual information.
+
+If the question asks for multiple items, include all relevant items.
 
 Do not provide only an introduction.
 
@@ -221,10 +237,12 @@ Return only the final answer.
 """
 
 
+    # --------------------------------------------------
     # Generate answer using Gemini
+    # --------------------------------------------------
+
     answer = None
 
-    # Number of Gemini attempts
     max_retries = 4
 
     for attempt in range(max_retries):
@@ -245,9 +263,41 @@ Return only the final answer.
                 }
             )
 
+
             if response and response.text:
 
-                answer = response.text.strip()
+                generated_answer = response.text.strip()
+
+
+                # --------------------------------------------------
+                # Validate generated answer
+                # --------------------------------------------------
+
+                incomplete_answer = (
+                    not generated_answer
+                    or len(generated_answer) < 20
+                    or generated_answer.endswith(":")
+                    or generated_answer.endswith("-")
+                    or generated_answer.endswith("**")
+                    or generated_answer.endswith(",")
+                )
+
+
+                if incomplete_answer:
+
+                    print(
+                        "Gemini returned an incomplete answer."
+                    )
+
+                    answer = (
+                        "I couldn't generate a complete answer "
+                        "from the available information. "
+                        "Please try asking the question again."
+                    )
+
+                else:
+
+                    answer = generated_answer
 
                 print(
                     f"Gemini request succeeded "
@@ -255,6 +305,7 @@ Return only the final answer.
                 )
 
                 break
+
 
             answer = (
                 "I couldn't generate an answer "
@@ -279,7 +330,7 @@ Return only the final answer.
             )
 
 
-            # Detect temporary Gemini server errors
+            # Temporary Gemini server errors
             is_temporary_error = (
                 "500" in error_text
                 or "503" in error_text
@@ -313,11 +364,7 @@ Return only the final answer.
                 break
 
 
-            # Exponential backoff:
-            #
-            # Attempt 1 -> wait 2 seconds
-            # Attempt 2 -> wait 4 seconds
-            # Attempt 3 -> wait 8 seconds
+            # Exponential backoff
             wait_time = 2 ** (attempt + 1)
 
             print(
@@ -328,7 +375,10 @@ Return only the final answer.
             time.sleep(wait_time)
 
 
+    # --------------------------------------------------
     # All attempts failed
+    # --------------------------------------------------
+
     if answer is None:
 
         answer = (
@@ -337,7 +387,10 @@ Return only the final answer.
         )
 
 
+    # --------------------------------------------------
     # Save user's question
+    # --------------------------------------------------
+
     add_message(
         user_id=user_id,
         role="user",
@@ -346,7 +399,10 @@ Return only the final answer.
     )
 
 
+    # --------------------------------------------------
     # Save AI answer and sources
+    # --------------------------------------------------
+
     add_message(
         user_id=user_id,
         role="assistant",
