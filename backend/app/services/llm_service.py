@@ -10,11 +10,17 @@ from app.services.chat_history import (
 )
 
 
+# --------------------------------------------------
 # Load environment variables
+# --------------------------------------------------
+
 load_dotenv()
 
 
+# --------------------------------------------------
 # Initialize Gemini client
+# --------------------------------------------------
+
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
 if not GEMINI_API_KEY:
@@ -22,11 +28,44 @@ if not GEMINI_API_KEY:
         "GEMINI_API_KEY is not configured."
     )
 
-
 client = genai.Client(
     api_key=GEMINI_API_KEY
 )
 
+
+# --------------------------------------------------
+# Helper function
+# --------------------------------------------------
+
+def is_incomplete_answer(text):
+    """
+    Check whether Gemini returned an incomplete answer.
+    """
+
+    if not text:
+        return True
+
+    text = text.strip()
+
+    if len(text) < 20:
+        return True
+
+    incomplete_endings = (
+        ":",
+        "-",
+        "**",
+        ","
+    )
+
+    if text.endswith(incomplete_endings):
+        return True
+
+    return False
+
+
+# --------------------------------------------------
+# Generate AI answer
+# --------------------------------------------------
 
 def generate_answer(
     question,
@@ -71,30 +110,27 @@ def generate_answer(
             if not content:
                 continue
 
-            # Skip incomplete assistant responses
+
+            # Ignore incomplete assistant responses
             if role == "assistant":
 
-                incomplete_response = (
-                    len(content) < 40
-                    or content.endswith(":")
-                    or content.endswith("-")
-                    or content.endswith("**")
-                    or content.endswith(",")
-                )
-
-                if incomplete_response:
+                if is_incomplete_answer(content):
                     continue
+
 
             history_parts.append(
                 f"{role}: {content}"
             )
 
+
         if history_parts:
+
             history_text = "\n".join(
                 history_parts
             )
 
         else:
+
             history_text = (
                 "No previous conversation."
             )
@@ -107,7 +143,7 @@ def generate_answer(
 
 
     # --------------------------------------------------
-    # Make sure context is not empty
+    # Make sure retrieved context is not empty
     # --------------------------------------------------
 
     if not context or not context.strip():
@@ -125,8 +161,8 @@ def generate_answer(
     system_prompt = """
 You are an AI assistant for a user's personal knowledge system.
 
-Your task is to answer the user's question using the retrieved
-documents, saved memories, and recent conversation history.
+Answer the user's question using the retrieved documents,
+saved memories, and recent conversation history.
 
 IMPORTANT RULES:
 
@@ -134,7 +170,7 @@ IMPORTANT RULES:
 
 2. Use the retrieved context as the primary source of information.
 
-3. Extract actual information from the context.
+3. Extract the actual information from the context.
 
 4. Do not merely describe what the context contains.
 
@@ -185,7 +221,7 @@ IMPORTANT RULES:
 
 22. Never return an incomplete list.
 
-23. Before finishing, verify that the answer directly answers the
+23. Before finishing, verify that the response directly answers the
     user's question.
 
 24. Return only the final answer.
@@ -243,7 +279,8 @@ Return only the final answer.
 
     answer = None
 
-    max_retries = 4
+    # Use two attempts to avoid waiting too long
+    max_retries = 2
 
     for attempt in range(max_retries):
 
@@ -254,8 +291,9 @@ Return only the final answer.
                 f"(attempt {attempt + 1}/{max_retries})..."
             )
 
+
             response = client.models.generate_content(
-                model="gemini-3.6-flash",
+                model="gemini-2.5-flash",
                 contents=prompt,
                 config={
                     "temperature": 0,
@@ -264,26 +302,18 @@ Return only the final answer.
             )
 
 
+            # --------------------------------------------------
+            # Check Gemini response
+            # --------------------------------------------------
+
             if response and response.text:
 
                 generated_answer = response.text.strip()
 
 
-                # --------------------------------------------------
-                # Validate generated answer
-                # --------------------------------------------------
-
-                incomplete_answer = (
-                    not generated_answer
-                    or len(generated_answer) < 20
-                    or generated_answer.endswith(":")
-                    or generated_answer.endswith("-")
-                    or generated_answer.endswith("**")
-                    or generated_answer.endswith(",")
-                )
-
-
-                if incomplete_answer:
+                if is_incomplete_answer(
+                    generated_answer
+                ):
 
                     print(
                         "Gemini returned an incomplete answer."
@@ -299,6 +329,7 @@ Return only the final answer.
 
                     answer = generated_answer
 
+
                 print(
                     f"Gemini request succeeded "
                     f"on attempt {attempt + 1}/{max_retries}"
@@ -306,6 +337,8 @@ Return only the final answer.
 
                 break
 
+
+            # Empty response
 
             answer = (
                 "I couldn't generate an answer "
@@ -330,9 +363,13 @@ Return only the final answer.
             )
 
 
-            # Temporary Gemini server errors
+            # --------------------------------------------------
+            # Detect temporary Gemini errors
+            # --------------------------------------------------
+
             is_temporary_error = (
-                "500" in error_text
+                "429" in error_text
+                or "500" in error_text
                 or "503" in error_text
                 or "INTERNAL" in error_text
                 or "UNAVAILABLE" in error_text
@@ -342,7 +379,8 @@ Return only the final answer.
             )
 
 
-            # Stop immediately for non-temporary errors
+            # Stop immediately for permanent errors
+
             if not is_temporary_error:
 
                 print(
@@ -354,6 +392,7 @@ Return only the final answer.
 
 
             # Final attempt failed
+
             if attempt == max_retries - 1:
 
                 print(
@@ -365,6 +404,7 @@ Return only the final answer.
 
 
             # Exponential backoff
+
             wait_time = 2 ** (attempt + 1)
 
             print(
@@ -376,7 +416,7 @@ Return only the final answer.
 
 
     # --------------------------------------------------
-    # All attempts failed
+    # Fallback if Gemini failed
     # --------------------------------------------------
 
     if answer is None:
@@ -410,5 +450,9 @@ Return only the final answer.
         sources=sources or []
     )
 
+
+    # --------------------------------------------------
+    # Return answer
+    # --------------------------------------------------
 
     return answer
